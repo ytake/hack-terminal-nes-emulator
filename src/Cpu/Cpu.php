@@ -5,84 +5,91 @@ namespace Ytake\Nes\Cpu;
 use type Ytake\Nes\Bus\CpuBus;
 use type Ytake\Nes\Cpu\Registers\AddrOrDataAndAdditionalCycle;
 use type Ytake\Nes\Cpu\Registers\Registers;
+use type Ytake\Nes\Cpu\Registers\Status;
+use type Ytake\Nes\Exception\UnknownAddressException;
 use type Ytake\Nes\Debugger;
 
-class Cpu {
+use function printf;
+use function hexdec;
+use function strval;
+use function intval;
+
+final class Cpu {
 
     /** @var \Nes\Cpu\Registers\Registers */
-    public $registers;
-    /** @var bool */
-    public $hasBranched;
-    /** @var \Nes\Bus\CpuBus */
-    public $bus;
+  public Registers $registers;
+    /** @var bool */  
+  public bool $hasBranched;
     /** @var \Nes\Cpu\OpCodeProps[] */
-    public $opCodeList;
-    /** @var \Nes\Cpu\Interrupts */
-    public $interrupts;
-    const CPU_CLOCK = 1789772.5;
-    public function __construct(CpuBus $bus, Interrupts $interrupts)
-    {
-        $this->bus = $bus;
-        $this->interrupts = $interrupts;
-        $this->registers = Registers::getDefault();
-        $this->hasBranched = false;
-        $this->opCodeList = [];
-        $opCodes = OpCode::getOpCodes();
-        foreach ($opCodes as $key => $op) {
-            $this->opCodeList[hexdec($key)] = $op;
-        }
+  public dict<int, OpCodeProps> $opCodeList = dict[];
+
+  const float CPU_CLOCK = 1789772.5;
+
+  public function __construct(
+    public CpuBus $bus, 
+    public Interrupts $interrupts,
+    OpCode $opcode
+  ) {
+    $this->registers = Registers::getDefault();
+    $this->hasBranched = false;
+    $opCodes = $opcode->getOpCodes();
+    foreach ($opCodes as $key => $op) {
+      $this->opCodeList[hexdec($key)] = $op;
     }
-    public function reset()
-    {
-        $this->registers = Registers::getDefault();
-        // TODO: flownes set 0x8000 to PC when read(0xfffc) fails.
-        $this->registers->pc = $this->read(0xFFFC, "Word");
-        printf("Initial pc: %04x\n", $this->registers->pc);
-    }
+  }
+
+  public function reset(): void {
+    $this->registers = Registers::getDefault();
+    // TODO: flownes set 0x8000 to PC when read(0xfffc) fails.
+    $this->registers->pc = $this->read(0xFFFC, "Word");
+    printf("Initial pc: %04x\n", $this->registers->pc);
+  }
+  
     /**
      * @param \Nes\Cpu\Addressing $mode
      *
      * @return \Nes\Cpu\Registers\AddrOrDataAndAdditionalCycle
      * @throws \Exception
      */
-    public function getAddrOrDataWithAdditionalCycle(Addressing $mode): AddrOrDataAndAdditionalCycle
-    {
-        switch ($mode) {
-            case Addressing::Accumulator:
-                return new AddrOrDataAndAdditionalCycle(0x00, 0);
-            case Addressing::Implied:
-                return new AddrOrDataAndAdditionalCycle(0x00, 0);
-            case Addressing::Immediate:
-                return new AddrOrDataAndAdditionalCycle($this->fetch($this->registers->pc), 0);
-            case Addressing::Relative:
-                $baseAddr = $this->fetch($this->registers->pc);
-                $addr = $baseAddr < 0x80 ? $baseAddr + $this->registers->pc : $baseAddr + $this->registers->pc - 256;
-                return new AddrOrDataAndAdditionalCycle(
-                    $addr,
-                    ($addr & 0xff00) !== ($this->registers->pc & 0xFF00) ? 1 : 0
-                );
-            case Addressing::ZeroPage:
-                return new AddrOrDataAndAdditionalCycle($this->fetch($this->registers->pc), 0);
-            case Addressing::ZeroPageX:
-                $addr = $this->fetch($this->registers->pc);
-                return new AddrOrDataAndAdditionalCycle(
-                    ($addr + $this->registers->x) & 0xff,
-                    0
-                );
-            case Addressing::ZeroPageY:
-                $addr = $this->fetch($this->registers->pc);
-                return new AddrOrDataAndAdditionalCycle(($addr + $this->registers->y & 0xff), 0);
-            case Addressing::Absolute:
-                return new AddrOrDataAndAdditionalCycle(($this->fetch($this->registers->pc, "Word")), 0);
-            case Addressing::AbsoluteX:
-                $addr = ($this->fetch($this->registers->pc, "Word"));
-                $additionalCycle = ($addr & 0xFF00) !== (($addr + $this->registers->x) & 0xFF00) ? 1 : 0;
-                return new AddrOrDataAndAdditionalCycle(($addr + $this->registers->x) & 0xFFFF, $additionalCycle);
-            case Addressing::AbsoluteY:
-                $addr = ($this->fetch($this->registers->pc, "Word"));
-                $additionalCycle = ($addr & 0xFF00) !== (($addr + $this->registers->y) & 0xFF00) ? 1 : 0;
-                return new AddrOrDataAndAdditionalCycle(($addr + $this->registers->y) & 0xFFFF, $additionalCycle);
-            case Addressing::PreIndexedIndirect:
+    public function getAddrOrDataWithAdditionalCycle(
+      Addressing $mode
+    ): AddrOrDataAndAdditionalCycle {
+      switch (\strval($mode)) {
+        case Addressing::Accumulator:
+          return new AddrOrDataAndAdditionalCycle(0x00, 0);
+        case Addressing::Implied:
+          return new AddrOrDataAndAdditionalCycle(0x00, 0);
+        case Addressing::Immediate:
+          return new AddrOrDataAndAdditionalCycle($this->fetch($this->registers->pc), 0);
+        case Addressing::Relative:
+          $baseAddr = $this->fetch($this->registers->pc);
+          $addr = $baseAddr < 0x80 ? $baseAddr + $this->registers->pc : $baseAddr + $this->registers->pc - 256;
+        return new AddrOrDataAndAdditionalCycle(
+          $addr,
+          ($addr & 0xff00) !== ($this->registers->pc & 0xFF00) ? 1 : 0
+        );
+        case Addressing::ZeroPage:
+          return new AddrOrDataAndAdditionalCycle($this->fetch($this->registers->pc), 0);
+        case Addressing::ZeroPageX:
+          $addr = $this->fetch($this->registers->pc);
+          return new AddrOrDataAndAdditionalCycle(
+            ($addr + $this->registers->x) & 0xff,
+            0
+          );
+        case Addressing::ZeroPageY:
+          $addr = $this->fetch($this->registers->pc);
+          return new AddrOrDataAndAdditionalCycle(($addr + $this->registers->y & 0xff), 0);
+        case Addressing::Absolute:
+          return new AddrOrDataAndAdditionalCycle(($this->fetch($this->registers->pc, "Word")), 0);
+        case Addressing::AbsoluteX:
+          $addr = ($this->fetch($this->registers->pc, "Word"));
+          $additionalCycle = ($addr & 0xFF00) !== (($addr + $this->registers->x) & 0xFF00) ? 1 : 0;
+        return new AddrOrDataAndAdditionalCycle(($addr + $this->registers->x) & 0xFFFF, $additionalCycle);
+        case Addressing::AbsoluteY:
+          $addr = ($this->fetch($this->registers->pc, "Word"));
+          $additionalCycle = ($addr & 0xFF00) !== (($addr + $this->registers->y) & 0xFF00) ? 1 : 0;
+          return new AddrOrDataAndAdditionalCycle(($addr + $this->registers->y) & 0xFFFF, $additionalCycle);
+        case Addressing::PreIndexedIndirect:
                 $baseAddr = ($this->fetch($this->registers->pc) + $this->registers->x) & 0xFF;
                 $addr = $this->read($baseAddr) + ($this->read(($baseAddr + 1) & 0xFF) << 8);
                 return new AddrOrDataAndAdditionalCycle(
@@ -102,71 +109,82 @@ class Cpu {
                 $addr = $this->read($addrOrData) +
                     ($this->read(($addrOrData & 0xFF00) | ((($addrOrData & 0xFF) + 1) & 0xFF)) << 8);
                 return new AddrOrDataAndAdditionalCycle($addr & 0xFFFF, 0);
-            default:
-                echo($mode);
-                throw new \Exception(`Unknown addressing $mode detected.`);
-        }
+      default:
+        echo($mode);
+        throw new UnknownAddressException("Unknown addressing $mode detected.");
     }
-    public function fetch(int $addr, string $size = 'Byte'): int
-    {
-        $this->registers->pc += ($size === "Word") ? 2 : 1;
-        return $this->read($addr, $size);
+  }
+
+  public function fetch(int $addr, string $size = 'Byte'): int {
+    $this->registers->pc += ($size === "Word") ? 2 : 1;
+    return $this->read($addr, $size);
+  }
+
+  public function read(int $addr, ?string $size = null): int {
+    $addr &= 0xFFFF;
+    if($size is string) {
+      // UNSAFE
+      return $size === "Word" 
+        ? ($this->bus->readByCpu($addr) | $this->bus->readByCpu($addr + 1) << 8) 
+        : $this->bus->readByCpu($addr);
     }
-    public function read(int $addr, string $size = null): int
-    {
-        $addr &= 0xFFFF;
-        return $size === "Word"
-            ? ($this->bus->readByCpu($addr) | $this->bus->readByCpu($addr + 1) << 8)
-            : $this->bus->readByCpu($addr);
+    return 0;
+  }
+
+  public function write(int $addr, int $data): void {
+    $this->bus->writeByCpu($addr, $data);
+  }
+
+  public function push(int $data): void {
+    $this->write(0x100 | ($this->registers->sp & 0xFF), $data);
+    $this->registers->sp--;
+  }
+
+  public function pop(): int {
+    $this->registers->sp++;
+    return $this->read(0x100 | ($this->registers->sp & 0xFF), 'Byte');
+  }
+
+  public function branch(int $addr): void {
+    $this->registers->pc = $addr;
+    $this->hasBranched = true;
+  }
+
+  public function pushStatus(): void {
+    $p = $this->registers->p;
+    if ($p is Status) {
+       $status = (+intval($p->negative)) << 7 |
+        (+intval($p->overflow)) << 6 |
+        (+intval($p->reserved)) << 5 |
+        (+intval($p->break_mode)) << 4 |
+        (+intval($p->decimal_mode)) << 3 |
+        (+intval($p->interrupt)) << 2 |
+        (+intval($p->zero)) << 1 |
+        (+intval($p->carry));
+       $this->push($status);
     }
-    public function write(int $addr, int $data)
-    {
-        $this->bus->writeByCpu($addr, $data);
+  }
+
+  public function popStatus(): void {
+    $status = $this->pop();
+    $p = $this->registers->p;
+    if ($p is Status) {
+      $p->negative = !!($status & 0x80);
+        $p->overflow = !!($status & 0x40);
+        $p->reserved = !!($status & 0x20);
+        $p->break_mode = !!($status & 0x10);
+        $p->decimal_mode = !!($status & 0x08);
+        $p->interrupt = !!($status & 0x04);
+        $p->zero = !!($status & 0x02);
+        $p->carry = !!($status & 0x01);
     }
-    public function push(int $data)
-    {
-        $this->write(0x100 | ($this->registers->sp & 0xFF), $data);
-        $this->registers->sp--;
-    }
-    public function pop(): int
-    {
-        $this->registers->sp++;
-        return $this->read(0x100 | ($this->registers->sp & 0xFF), 'Byte');
-    }
-    public function branch(int $addr)
-    {
-        $this->registers->pc = $addr;
-        $this->hasBranched = true;
-    }
-    public function pushStatus()
-    {
-        $status = (+$this->registers->p->negative) << 7 |
-            (+$this->registers->p->overflow) << 6 |
-            (+$this->registers->p->reserved) << 5 |
-            (+$this->registers->p->break_mode) << 4 |
-            (+$this->registers->p->decimal_mode) << 3 |
-            (+$this->registers->p->interrupt) << 2 |
-            (+$this->registers->p->zero) << 1 |
-            (+$this->registers->p->carry);
-        $this->push($status);
-    }
-    public function popStatus()
-    {
-        $status = $this->pop();
-        $this->registers->p->negative = !!($status & 0x80);
-        $this->registers->p->overflow = !!($status & 0x40);
-        $this->registers->p->reserved = !!($status & 0x20);
-        $this->registers->p->break_mode = !!($status & 0x10);
-        $this->registers->p->decimal_mode = !!($status & 0x08);
-        $this->registers->p->interrupt = !!($status & 0x04);
-        $this->registers->p->zero = !!($status & 0x02);
-        $this->registers->p->carry = !!($status & 0x01);
-    }
-    public function popPC()
-    {
-        $this->registers->pc = $this->pop();
-        $this->registers->pc += ($this->pop() << 8);
-    }
+  }
+
+  public function popPC(): void {
+    $this->registers->pc = $this->pop();
+    $this->registers->pc += ($this->pop() << 8);
+  }
+
     /**
      * @param string $baseName
      * @param int $addrOrData
@@ -174,21 +192,27 @@ class Cpu {
      *
      * @throws \Exception
      */
-    public function execInstruction(string $baseName, int $addrOrData, Addressing $mode)
-    {
-        $this->hasBranched = false;
-        switch ($baseName) {
-            case 'LDA':
-                $this->registers->a = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
-                $this->registers->p->negative = !!($this->registers->a & 0x80);
-                $this->registers->p->zero = !$this->registers->a;
+  public function execInstruction(
+    string $baseName,
+    int $addrOrData,
+    Addressing $mode
+  ): void {
+    $this->hasBranched = false;
+    switch ($baseName) {
+      case 'LDA':
+        $this->registers->a = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
+        // UNSAFE
+        $this->registers->p->negative = !!($this->registers->a & 0x80);
+        $this->registers->p->zero = !$this->registers->a;
                 break;
             case 'LDX':
+                // UNSAFE
                 $this->registers->x = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
                 $this->registers->p->negative = !!($this->registers->x & 0x80);
                 $this->registers->p->zero = !$this->registers->x;
                 break;
             case 'LDY':
+                // UNSAFE
                 $this->registers->y = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
                 $this->registers->p->negative = !!($this->registers->y & 0x80);
                 $this->registers->p->zero = !$this->registers->y;
@@ -583,10 +607,11 @@ class Cpu {
                 throw new \Exception(sprintf('Unknown opecode %s detected.', $baseName));
         }
     }
-    public function processNmi()
-    {
-        $this->interrupts->deassertNmi();
-        $this->registers->p->break_mode = false;
+
+  public function processNmi(): void {
+    $this->interrupts->deassertNmi();
+    
+    $this->registers->p->break_mode = false;
         $this->push(($this->registers->pc >> 8) & 0xFF);
         $this->push($this->registers->pc & 0xFF);
         $this->pushStatus();
