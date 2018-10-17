@@ -91,6 +91,7 @@ class Ppu {
 
     /** @var \Nes\Ppu\Tile[] */
   public vec<Tile> $background = vec[];
+
     /** @var \Nes\Ppu\SpriteWithAttribute[] */
   public dict<int, SpriteWithAttribute> $sprites = dict[];
     /** @var \Nes\Ppu\Palette */
@@ -231,7 +232,6 @@ class Ppu {
   public function run(int $cycle): ?RenderingData {
     $this->cycle += $cycle;
     if ($this->line === 0) {
-      $this->background = vec[];
       $this->buildSprites();
     }
 
@@ -268,21 +268,20 @@ class Ppu {
         return null;
     }
 
-    public function buildTile(int $tileX, int $tileY, int $offset): Tile
-    {
-        // INFO see. http://hp.vector.co.jp/authors/VA042397/nes/ppu.html
-        $blockId = $this->getBlockId($tileX, $tileY);
-        $spriteId = $this->getSpriteId($tileX, $tileY, $offset);
-        $attr = $this->getAttribute($tileX, $tileY, $offset);
-        $paletteId = ($attr >> ($blockId * 2)) & 0x03;
-        $sprite = $this->buildSprite($spriteId, $this->backgroundTableOffset());
-        return new Tile(
-            $sprite,
-            $paletteId,
-            $this->scrollX,
-            $this->scrollY
-        );
-    }
+  public function buildTile(int $tileX, int $tileY, int $offset): Tile {
+    // INFO see. http://hp.vector.co.jp/authors/VA042397/nes/ppu.html
+    $blockId = $this->getBlockId($tileX, $tileY);
+    $spriteId = $this->getSpriteId($tileX, $tileY, $offset);
+    $attr = $this->getAttribute($tileX, $tileY, $offset);
+    $paletteId = ($attr >> ($blockId * 2)) & 0x03;
+    $sprite = $this->buildSprite($spriteId, $this->backgroundTableOffset());
+    return new Tile(
+      $sprite,
+      $paletteId,
+      $this->scrollX,
+      $this->scrollY
+    );
+  }
 
     public function buildBackground(): void
     {
@@ -419,64 +418,52 @@ class Ppu {
   }
 
   public function writeScrollData(int $data): void {
-        if ($this->isHorizontalScroll) {
-            $this->isHorizontalScroll = false;
-            $this->scrollX = $data & 0xFF;
-        } else {
-            $this->scrollY = $data & 0xFF;
-            $this->isHorizontalScroll = true;
-        }
+    if ($this->isHorizontalScroll) {
+      $this->isHorizontalScroll = false;
+      $this->scrollX = $data & 0xFF;
+    } else {
+      $this->scrollY = $data & 0xFF;
+      $this->isHorizontalScroll = true;
     }
+  }
 
-    public function writeVramAddr(int $data)
-    {
-        if ($this->isLowerVramAddr) {
-            $this->vramAddr += $data;
-            $this->isLowerVramAddr = false;
-            $this->isValidVramAddr = true;
-        } else {
-            $this->vramAddr = $data << 8;
-            $this->isLowerVramAddr = true;
-            $this->isValidVramAddr = false;
-        }
+  public function writeVramAddr(int $data): void {
+    if ($this->isLowerVramAddr) {
+      $this->vramAddr += $data;
+      $this->isLowerVramAddr = false;
+      $this->isValidVramAddr = true;
+    } else {
+      $this->vramAddr = $data << 8;
+      $this->isLowerVramAddr = true;
+      $this->isValidVramAddr = false;
     }
+  }
 
-    public function calcVramAddr(): int
-    {
-        return ($this->vramAddr >= 0x3000 && $this->vramAddr < 0x3f00)
-            ? $this->vramAddr -= 0x3000
-            : $this->vramAddr - 0x2000;
-    }
+  public function calcVramAddr(): int {
+    return ($this->vramAddr >= 0x3000 && $this->vramAddr < 0x3f00)
+      ? $this->vramAddr -= 0x3000
+      : $this->vramAddr - 0x2000;
+  }
 
-    public function writeVramData(int $data)
-    {
-        if ($this->vramAddr >= 0x2000) {
-            if ($this->vramAddr >= 0x3f00 && $this->vramAddr < 0x4000) {
-                $this->palette->write($this->vramAddr - 0x3f00, $data);
-            } else {
-                $this->writeVram($this->calcVramAddr(), $data);
-            }
-        } else {
-            $this->writeCharacterRAM($this->vramAddr, $data);
-        }
-        $this->vramAddr += $this->vramOffset();
+  public function writeVramData(int $data): void {
+    if ($this->vramAddr >= 0x2000) {
+      if ($this->vramAddr >= 0x3f00 && $this->vramAddr < 0x4000) {
+        $this->palette->write($this->vramAddr - 0x3f00, $data);
+      } else {
+        $this->writeVram($this->calcVramAddr(), $data);
+      }
+    } else {
+      $this->writeCharacterRAM($this->vramAddr, $data);
     }
+    $this->vramAddr += $this->vramOffset();
+  }
 
-    public function writeVram(int $addr, int $data)
-    {
-        $this->vram->write($addr, $data);
-    }
+  public function writeVram(int $addr, int $data): void {
+    $this->vram->write($addr, $data);
+  }
 
-    public function transferSprite(int $index, int $data)
-    {
-        // The DMA transfer will begin at the current OAM write address.
-        // It is common practice to initialize it to 0 with a write to PPU 0x2003 before the DMA transfer.
-        // Different starting addresses can be used for a simple OAM cycling technique
-        // to alleviate sprite priority conflicts by flickering. If using this technique
-        // after the DMA OAMADDR should be set to 0 before the end of vblank to prevent potential OAM corruption
-        // (See: Errata).
-        // However, due to OAMADDR writes also having a "corruption" effect[5] this technique is not recommended.
-        $addr = $index + $this->spriteRamAddr;
-        $this->spriteRam->write($addr % 0x100, $data);
-    }
+  public function transferSprite(int $index, int $data): void {
+    $addr = $index + $this->spriteRamAddr;
+    $this->spriteRam->write($addr % 0x100, $data);
+  }
 }

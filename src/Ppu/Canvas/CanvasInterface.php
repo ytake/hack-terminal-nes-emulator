@@ -1,7 +1,11 @@
-<?php
-namespace Nes\Ppu\Canvas;
+<?hh // strict
 
-interface CanvasInterface
-{
-    public function draw(array $frameBuffer);
+namespace Ytake\Nes\Ppu\Canvas;
+
+<<__Sealed(NullCanvas::class, PngCanvas::class, TerminalCanvas::class)>>
+interface CanvasInterface {
+
+  public function draw(
+    vec<int> $frameBuffer
+  ): void;
 }

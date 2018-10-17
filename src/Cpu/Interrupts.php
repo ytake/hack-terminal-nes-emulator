@@ -5,7 +5,6 @@ namespace Ytake\Nes\Cpu;
 final class Interrupts {
 
   private bool $nmi = false;
-
   private bool $irq = false;
 
   public function isNmiAssert(): bool {

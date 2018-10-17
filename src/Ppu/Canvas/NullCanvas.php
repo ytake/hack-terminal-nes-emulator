@@ -1,40 +1,47 @@
-<?php
-namespace Nes\Ppu\Canvas;
+<?hh // strict
 
-class NullCanvas implements CanvasInterface
-{
-    private $fp;
-    private $frame;
-    private $last;
-    private $initial;
+namespace Ytake\Nes\Ppu\Canvas;
 
-    public function __construct()
-    {
-        $dir = 'tmp';
-        if (! is_dir(($dir))) {
-            mkdir($dir);
-        }
-        $this->fp = fopen($dir.'/nes.log', 'w');
+use function is_dir;
+use function mkdir;
+use function fopen;
+use function time;
+use function fclose;
+use function microtime;
+use function floor;
+use function printf;
+use function fprintf;
 
-        $this->last = -1;
-        $this->initial = time();
+class NullCanvas implements CanvasInterface, \IDisposable {
+    
+  private resource $fp;
+  private int $frame = 0;
+  private float $last = -1.0;
+  private int $initial;
+
+  public function __construct() {
+    $dir = 'tmp';
+    if (! is_dir(($dir))) {
+      mkdir($dir);
     }
+    $this->fp = fopen($dir.'/nes.log', 'w');
+    $this->initial = time();
+  }
 
-    public function __destruct()
-    {
-        fclose($this->fp);
+  public function __dispose(): void {
+    fclose($this->fp);
+  }
+
+  public function draw(
+    vec<int> $frameBuffer
+  ): void {
+    $microTime = microtime(true);
+    $second = floor($microTime);
+    if ($second !== $this->last) {
+      printf("%6d %dfps\n", $second - $this->initial, $this->frame);
+      $this->frame = 0;
     }
-
-    public function draw(array $frameBuffer)
-    {
-        $microTime = microtime(true);
-        $second = floor($microTime);
-        if ($second !== $this->last) {
-            printf("%6d %dfps\n", $second - $this->initial, $this->frame);
-            $this->frame = 0;
-        }
-        fprintf($this->fp, "%-8.2f frame %d\n", $microTime, $this->frame++);
-
-        $this->last = floor($microTime);
-    }
+    fprintf($this->fp, "%-8.2f frame %d\n", $microTime, $this->frame++);
+      $this->last = floor($microTime);
+  }
 }
