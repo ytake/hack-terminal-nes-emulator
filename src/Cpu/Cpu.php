@@ -7,18 +7,17 @@ use type Ytake\Nes\Cpu\Registers\AddrOrDataAndAdditionalCycle;
 use type Ytake\Nes\Cpu\Registers\Registers;
 use type Ytake\Nes\Cpu\Registers\Status;
 use type Ytake\Nes\Exception\UnknownAddressException;
-use type Ytake\Nes\Debugger;
 
 use function printf;
 use function hexdec;
-use function strval;
 use function intval;
+use function sprintf;
 
 final class Cpu {
 
     /** @var \Nes\Cpu\Registers\Registers */
   public Registers $registers;
-    /** @var bool */  
+    /** @var bool */
   public bool $hasBranched;
     /** @var \Nes\Cpu\OpCodeProps[] */
   public dict<int, OpCodeProps> $opCodeList = dict[];
@@ -26,7 +25,7 @@ final class Cpu {
   const float CPU_CLOCK = 1789772.5;
 
   public function __construct(
-    public CpuBus $bus, 
+    public CpuBus $bus,
     public Interrupts $interrupts,
     OpCode $opcode
   ) {
@@ -44,7 +43,7 @@ final class Cpu {
     $this->registers->pc = $this->read(0xFFFC, "Word");
     printf("Initial pc: %04x\n", $this->registers->pc);
   }
-  
+
     /**
      * @param \Nes\Cpu\Addressing $mode
      *
@@ -111,7 +110,7 @@ final class Cpu {
                 return new AddrOrDataAndAdditionalCycle($addr & 0xFFFF, 0);
       default:
         echo($mode);
-        throw new UnknownAddressException("Unknown addressing $mode detected.");
+        throw new UnknownAddressException("Unknown addressing ".$mode." detected.");
     }
   }
 
@@ -124,8 +123,8 @@ final class Cpu {
     $addr &= 0xFFFF;
     if($size is string) {
       // UNSAFE
-      return $size === "Word" 
-        ? ($this->bus->readByCpu($addr) | $this->bus->readByCpu($addr + 1) << 8) 
+      return $size === "Word"
+        ? ($this->bus->readByCpu($addr) | $this->bus->readByCpu($addr + 1) << 8)
         : $this->bus->readByCpu($addr);
     }
     return 0;
@@ -185,13 +184,6 @@ final class Cpu {
     $this->registers->pc += ($this->pop() << 8);
   }
 
-    /**
-     * @param string $baseName
-     * @param int $addrOrData
-     * @param \Nes\Cpu\Addressing $mode
-     *
-     * @throws \Exception
-     */
   public function execInstruction(
     string $baseName,
     int $addrOrData,
@@ -200,48 +192,52 @@ final class Cpu {
     $this->hasBranched = false;
     switch ($baseName) {
       case 'LDA':
-        $this->registers->a = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
+        $this->registers->a = ($mode === Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
         // UNSAFE
         $this->registers->p->negative = !!($this->registers->a & 0x80);
         $this->registers->p->zero = !$this->registers->a;
-                break;
-            case 'LDX':
-                // UNSAFE
-                $this->registers->x = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
-                $this->registers->p->negative = !!($this->registers->x & 0x80);
-                $this->registers->p->zero = !$this->registers->x;
-                break;
-            case 'LDY':
-                // UNSAFE
-                $this->registers->y = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
-                $this->registers->p->negative = !!($this->registers->y & 0x80);
-                $this->registers->p->zero = !$this->registers->y;
-                break;
-            case 'STA':
-                $this->write($addrOrData, $this->registers->a);
-                break;
-            case 'STX':
-                $this->write($addrOrData, $this->registers->x);
-                break;
-            case 'STY':
-                $this->write($addrOrData, $this->registers->y);
-                break;
-            case 'TAX':
-                $this->registers->x = $this->registers->a;
-                $this->registers->p->negative = !!($this->registers->x & 0x80);
-                $this->registers->p->zero = !$this->registers->x;
-                break;
-            case 'TAY':
-                $this->registers->y = $this->registers->a;
-                $this->registers->p->negative = !!($this->registers->y & 0x80);
-                $this->registers->p->zero = !$this->registers->y;
-                break;
-            case 'TSX':
-                $this->registers->x = $this->registers->sp & 0xFF;
-                $this->registers->p->negative = !!($this->registers->x & 0x80);
-                $this->registers->p->zero = !$this->registers->x;
+        break;
+      case 'LDX':
+        // UNSAFE
+        $this->registers->x = ($mode === Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
+        $this->registers->p->negative = !!($this->registers->x & 0x80);
+        $this->registers->p->zero = !$this->registers->x;
+        break;
+      case 'LDY':
+        // UNSAFE
+        $this->registers->y = ($mode === Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
+        $this->registers->p->negative = !!($this->registers->y & 0x80);
+        $this->registers->p->zero = !$this->registers->y;
+        break;
+      case 'STA':
+        $this->write($addrOrData, $this->registers->a);
+        break;
+      case 'STX':
+        $this->write($addrOrData, $this->registers->x);
+        break;
+      case 'STY':
+        $this->write($addrOrData, $this->registers->y);
+        break;
+      case 'TAX':
+        // UNSAFE
+        $this->registers->x = $this->registers->a;
+        $this->registers->p->negative = !!($this->registers->x & 0x80);
+        $this->registers->p->zero = !$this->registers->x;
+        break;
+      case 'TAY':
+        // UNSAFE
+        $this->registers->y = $this->registers->a;
+        $this->registers->p->negative = !!($this->registers->y & 0x80);
+        $this->registers->p->zero = !$this->registers->y;
+        break;
+      case 'TSX':
+        // UNSAFE
+        $this->registers->x = $this->registers->sp & 0xFF;
+        $this->registers->p->negative = !!($this->registers->x & 0x80);
+        $this->registers->p->zero = !$this->registers->x;
                 break;
             case 'TXA':
+            // UNSAFE
                 $this->registers->a = $this->registers->x;
                 $this->registers->p->negative = !!($this->registers->a & 0x80);
                 $this->registers->p->zero = !$this->registers->a;
@@ -250,15 +246,17 @@ final class Cpu {
                 $this->registers->sp = $this->registers->x + 0x0100;
                 break;
             case 'TYA':
+            // UNSAFE
                 $this->registers->a = $this->registers->y;
                 $this->registers->p->negative = !!($this->registers->a & 0x80);
                 $this->registers->p->zero = !$this->registers->a;
                 break;
             case 'ADC':
-                $data = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
+            // UNSAFE
+                $data = ($mode === Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
                 $operated = $data + $this->registers->a + $this->registers->p->carry;
-                $overflow = (!((($this->registers->a ^ $data) & 0x80) != 0) &&
-                    ((($this->registers->a ^ $operated) & 0x80)) != 0);
+                $overflow = (!((($this->registers->a ^ $data) & 0x80) !== 0) &&
+                    ((($this->registers->a ^ $operated) & 0x80)) !== 0);
                 $this->registers->p->overflow = $overflow;
                 $this->registers->p->carry = $operated > 0xFF;
                 $this->registers->p->negative = !!($operated & 0x80);
@@ -266,14 +264,16 @@ final class Cpu {
                 $this->registers->a = $operated & 0xFF;
                 break;
             case 'AND':
-                $data = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
+            // UNSAFE
+                $data = ($mode === Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
                 $operated = $data & $this->registers->a;
                 $this->registers->p->negative = !!($operated & 0x80);
                 $this->registers->p->zero = !$operated;
                 $this->registers->a = $operated & 0xFF;
                 break;
             case 'ASL':
-                if ($mode == Addressing::Accumulator) {
+            // UNSAFE
+                if ($mode === Addressing::Accumulator) {
                     $acc = $this->registers->a;
                     $this->registers->p->carry = !!($acc & 0x80);
                     $this->registers->a = ($acc << 1) & 0xFF;
@@ -289,73 +289,85 @@ final class Cpu {
                 }
                 break;
             case 'BIT':
+            // UNSAFE
                 $data = $this->read($addrOrData);
                 $this->registers->p->negative = !!($data & 0x80);
                 $this->registers->p->overflow = !!($data & 0x40);
                 $this->registers->p->zero = !($this->registers->a & $data);
                 break;
             case 'CMP':
-                $data = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
+            // UNSAFE
+                $data = ($mode === Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
                 $compared = $this->registers->a - $data;
                 $this->registers->p->carry = $compared >= 0;
                 $this->registers->p->negative = !!($compared & 0x80);
                 $this->registers->p->zero = !($compared & 0xff);
                 break;
             case 'CPX':
-                $data = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
+            // UNSAFE
+                $data = ($mode === Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
                 $compared = $this->registers->x - $data;
                 $this->registers->p->carry = $compared >= 0;
                 $this->registers->p->negative = !!($compared & 0x80);
                 $this->registers->p->zero = !($compared & 0xff);
                 break;
             case 'CPY':
-                $data = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
+            // UNSAFE
+                $data = ($mode === Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
                 $compared = $this->registers->y - $data;
                 $this->registers->p->carry = $compared >= 0;
                 $this->registers->p->negative = !!($compared & 0x80);
                 $this->registers->p->zero = !($compared & 0xff);
                 break;
             case 'DEC':
+            // UNSAFE
                 $data = ($this->read($addrOrData) - 1) & 0xFF;
                 $this->registers->p->negative = !!($data & 0x80);
                 $this->registers->p->zero = !$data;
                 $this->write($addrOrData, $data);
                 break;
             case 'DEX':
+            // UNSAFE
                 $this->registers->x = ($this->registers->x - 1) & 0xFF;
                 $this->registers->p->negative = !!($this->registers->x & 0x80);
                 $this->registers->p->zero = !$this->registers->x;
                 break;
             case 'DEY':
+            // UNSAFE
                 $this->registers->y = ($this->registers->y - 1) & 0xFF;
                 $this->registers->p->negative = !!($this->registers->y & 0x80);
                 $this->registers->p->zero = !$this->registers->y;
                 break;
             case 'EOR':
-                $data = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
+            // UNSAFE
+                $data = ($mode === Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
                 $operated = $data ^ $this->registers->a;
                 $this->registers->p->negative = !!($operated & 0x80);
                 $this->registers->p->zero = !$operated;
                 $this->registers->a = $operated & 0xFF;
                 break;
             case 'INC':
+            // UNSAFE
                 $data = ($this->read($addrOrData) + 1) & 0xFF;
                 $this->registers->p->negative = !!($data & 0x80);
                 $this->registers->p->zero = !$data;
                 $this->write($addrOrData, $data);
                 break;
             case 'INX':
+            // UNSAFE
                 $this->registers->x = ($this->registers->x + 1) & 0xFF;
                 $this->registers->p->negative = !!($this->registers->x & 0x80);
                 $this->registers->p->zero = !$this->registers->x;
                 break;
             case 'INY':
+            // UNSAFE
                 $this->registers->y = ($this->registers->y + 1) & 0xFF;
                 $this->registers->p->negative = !!($this->registers->y & 0x80);
                 $this->registers->p->zero = !$this->registers->y;
                 break;
             case 'LSR':
-                if ($mode == Addressing::Accumulator) {
+            // UNSAFE
+                if ($mode === Addressing::Accumulator) {
                     $acc = $this->registers->a & 0xFF;
                     $this->registers->p->carry = !!($acc & 0x01);
                     $this->registers->a = $acc >> 1;
@@ -369,14 +381,16 @@ final class Cpu {
                 $this->registers->p->negative = false;
                 break;
             case 'ORA':
-                $data = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
+            // UNSAFE
+                $data = ($mode === Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
                 $operated = $data | $this->registers->a;
                 $this->registers->p->negative = !!($operated & 0x80);
                 $this->registers->p->zero = !$operated;
                 $this->registers->a = $operated & 0xFF;
                 break;
             case 'ROL':
-                if ($mode == Addressing::Accumulator) {
+            // UNSAFE
+                if ($mode === Addressing::Accumulator) {
                     $acc = $this->registers->a;
                     $this->registers->a = ($acc << 1) & 0xFF | ($this->registers->p->carry ? 0x01 : 0x00);
                     $this->registers->p->carry = !!($acc & 0x80);
@@ -392,7 +406,8 @@ final class Cpu {
                 }
                 break;
             case 'ROR':
-                if ($mode == Addressing::Accumulator) {
+            // UNSAFE
+                if ($mode === Addressing::Accumulator) {
                     $acc = $this->registers->a;
                     $this->registers->a = $acc >> 1 | ($this->registers->p->carry ? 0x80 : 0x00);
                     $this->registers->p->carry = !!($acc & 0x01);
@@ -408,10 +423,11 @@ final class Cpu {
                 }
                 break;
             case 'SBC':
-                $data = ($mode == Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
+            // UNSAFE
+                $data = ($mode === Addressing::Immediate) ? $addrOrData : $this->read($addrOrData);
                 $operated = $this->registers->a - $data - ($this->registers->p->carry ? 0 : 1);
-                $overflow = ((($this->registers->a ^ $operated) & 0x80) != 0 &&
-                    (($this->registers->a ^ $data) & 0x80) != 0);
+                $overflow = ((($this->registers->a ^ $operated) & 0x80) !== 0 &&
+                    (($this->registers->a ^ $data) & 0x80) !== 0);
                 $this->registers->p->overflow = $overflow;
                 $this->registers->p->carry = $operated >= 0;
                 $this->registers->p->negative = !!($operated & 0x80);
@@ -422,15 +438,18 @@ final class Cpu {
                 $this->push($this->registers->a);
                 break;
             case 'PHP':
+            // UNSAFE
                 $this->registers->p->break_mode = true;
                 $this->pushStatus();
                 break;
             case 'PLA':
+            // UNSAFE
                 $this->registers->a = $this->pop();
                 $this->registers->p->negative = !!($this->registers->a & 0x80);
                 $this->registers->p->zero = !$this->registers->a;
                 break;
             case 'PLP':
+            // UNSAFE
                 $this->popStatus();
                 $this->registers->p->reserved = true;
                 break;
@@ -448,72 +467,89 @@ final class Cpu {
                 $this->registers->pc++;
                 break;
             case 'RTI':
+            // UNSAFE
                 $this->popStatus();
                 $this->popPC();
                 $this->registers->p->reserved = true;
                 break;
             case 'BCC':
+            // UNSAFE
                 if (!$this->registers->p->carry) {
                     $this->branch($addrOrData);
                 }
                 break;
             case 'BCS':
+            // UNSAFE
                 if ($this->registers->p->carry) {
                     $this->branch($addrOrData);
                 }
                 break;
             case 'BEQ':
+            // UNSAFE
                 if ($this->registers->p->zero) {
                     $this->branch($addrOrData);
                 }
                 break;
             case 'BMI':
+            // UNSAFE
                 if ($this->registers->p->negative) {
                     $this->branch($addrOrData);
                 }
                 break;
             case 'BNE':
+            // UNSAFE
                 if (!$this->registers->p->zero) {
                     $this->branch($addrOrData);
                 }
                 break;
             case 'BPL':
+            // UNSAFE
                 if (!$this->registers->p->negative) {
                     $this->branch($addrOrData);
                 }
                 break;
             case 'BVS':
+            // UNSAFE
                 if ($this->registers->p->overflow) {
                     $this->branch($addrOrData);
                 }
                 break;
             case 'BVC':
+            // UNSAFE
                 if (!$this->registers->p->overflow) {
                     $this->branch($addrOrData);
                 }
                 break;
             case 'CLD':
+            // UNSAFE
                 $this->registers->p->decimal_mode = false;
                 break;
             case 'CLC':
+            // UNSAFE
                 $this->registers->p->carry = false;
                 break;
             case 'CLI':
+            // UNSAFE
                 $this->registers->p->interrupt = false;
                 break;
             case 'CLV':
+            // UNSAFE
                 $this->registers->p->overflow = false;
                 break;
             case 'SEC':
+            // UNSAFE
                 $this->registers->p->carry = true;
                 break;
             case 'SEI':
+            // UNSAFE
                 $this->registers->p->interrupt = true;
                 break;
             case 'SED':
+            // UNSAFE
                 $this->registers->p->decimal_mode = true;
                 break;
             case 'BRK':
+            // UNSAFE
                 $interrupt = $this->registers->p->interrupt;
                 $this->registers->pc++;
                 $this->push(($this->registers->pc >> 8) & 0xFF);
@@ -537,6 +573,7 @@ final class Cpu {
                 $this->registers->pc += 2;
                 break;
             case 'LAX':
+            // UNSAFE
                 $this->registers->a = $this->registers->x = $this->read($addrOrData);
                 $this->registers->p->negative = !!($this->registers->a & 0x80);
                 $this->registers->p->zero = !$this->registers->a;
@@ -546,16 +583,18 @@ final class Cpu {
                 $this->write($addrOrData, $operated);
                 break;
             case 'DCP':
+            // UNSAFE
                 $operated = ($this->read($addrOrData) - 1) & 0xFF;
                 $this->registers->p->negative = !!((($this->registers->a - $operated) & 0x1FF) & 0x80);
                 $this->registers->p->zero = !(($this->registers->a - $operated) & 0x1FF);
                 $this->write($addrOrData, $operated);
                 break;
             case 'ISB':
+            // UNSAFE
                 $data = ($this->read($addrOrData) + 1) & 0xFF;
                 $operated = (~$data & 0xFF) + $this->registers->a + $this->registers->p->carry;
-                $overflow = (!((($this->registers->a ^ $data) & 0x80) != 0) &&
-                    ((($this->registers->a ^ $operated) & 0x80)) != 0);
+                $overflow = (!((($this->registers->a ^ $data) & 0x80) !== 0) &&
+                    ((($this->registers->a ^ $operated) & 0x80)) !== 0);
                 $this->registers->p->overflow = $overflow;
                 $this->registers->p->carry = $operated > 0xFF;
                 $this->registers->p->negative = !!($operated & 0x80);
@@ -564,6 +603,7 @@ final class Cpu {
                 $this->write($addrOrData, $data);
                 break;
             case 'SLO':
+            // UNSAFE
                 $data = $this->read($addrOrData);
                 $this->registers->p->carry = !!($data & 0x80);
                 $data = ($data << 1) & 0xFF;
@@ -573,6 +613,7 @@ final class Cpu {
                 $this->write($addrOrData, $data);
                 break;
             case 'RLA':
+            // UNSAFE
                 $data = ($this->read($addrOrData) << 1) + $this->registers->p->carry;
                 $this->registers->p->carry = !!($data & 0x100);
                 $this->registers->a = ($data & $this->registers->a) & 0xFF;
@@ -581,6 +622,7 @@ final class Cpu {
                 $this->write($addrOrData, $data);
                 break;
             case 'SRE':
+            // UNSAFE
                 $data = $this->read($addrOrData);
                 $this->registers->p->carry = !!($data & 0x01);
                 $data >>= 1;
@@ -590,12 +632,13 @@ final class Cpu {
                 $this->write($addrOrData, $data);
                 break;
             case 'RRA':
+            // UNSAFE
                 $data = $this->read($addrOrData);
                 $carry = !!($data & 0x01);
                 $data = ($data >> 1) | ($this->registers->p->carry ? 0x80 : 0x00);
                 $operated = $data + $this->registers->a + $carry;
-                $overflow = (!((($this->registers->a ^ $data) & 0x80) != 0) &&
-                    ((($this->registers->a ^ $operated) & 0x80)) != 0);
+                $overflow = (!((($this->registers->a ^ $data) & 0x80) !== 0) &&
+                    ((($this->registers->a ^ $operated) & 0x80)) !== 0);
                 $this->registers->p->overflow = $overflow;
                 $this->registers->p->negative = !!($operated & 0x80);
                 $this->registers->p->zero = !($operated & 0xFF);
@@ -610,47 +653,50 @@ final class Cpu {
 
   public function processNmi(): void {
     $this->interrupts->deassertNmi();
-    
-    $this->registers->p->break_mode = false;
-        $this->push(($this->registers->pc >> 8) & 0xFF);
-        $this->push($this->registers->pc & 0xFF);
-        $this->pushStatus();
-        $this->registers->p->interrupt = true;
-        $this->registers->pc = $this->read(0xFFFA, "Word");
+    $p = $this->registers->p;
+    $pc = $this->registers->pc;
+    if($p is Status) {
+      $p->break_mode = false;
+      $this->push(($this->registers->pc >> 8) & 0xFF);
+      $this->push($this->registers->pc & 0xFF);
+      $this->pushStatus();
+      $p->interrupt = true;
+      $this->registers->pc = $this->read(0xFFFA, "Word");
     }
-    public function processIrq()
-    {
-        if ($this->registers->p->interrupt) {
-            return;
-        }
-        $this->interrupts->deassertIrq();
-        $this->registers->p->break_mode = false;
-        $this->push(($this->registers->pc >> 8) & 0xFF);
-        $this->push($this->registers->pc & 0xFF);
-        $this->pushStatus();
-        $this->registers->p->interrupt = true;
-        $this->registers->pc = $this->read(0xFFFE, "Word");
+  }
+
+  public function processIrq(): void {
+    $p = $this->registers->p;
+    if($p is Status) {
+      if ($p->interrupt) {
+        return;
+      }
+      $this->interrupts->deassertIrq();
+      $p->break_mode = false;
+      $this->push(($this->registers->pc >> 8) & 0xFF);
+      $this->push($this->registers->pc & 0xFF);
+      $this->pushStatus();
+      $p->interrupt = true;
+      $this->registers->pc = $this->read(0xFFFE, "Word");
     }
-    /**
-     * @return int
-     * @throws \Exception
-     */
-    public function run(): int
-    {
-        if ($this->interrupts->isNmiAssert()) {
-            $this->processNmi();
-        }
-        if ($this->interrupts->isIrqAssert()) {
-            $this->processIrq();
-        }
-        $opcode = $this->fetch($this->registers->pc, 'Byte');
-        $ocp = $this->opCodeList[$opcode];
-        $data = $this->getAddrOrDataWithAdditionalCycle($ocp->mode);
-        $this->execInstruction($ocp->baseName, $data->addrOrData, $ocp->mode);
-        return $ocp->cycle + $data->additionalCycle + ($this->hasBranched ? 1 : 0);
+  }
+
+  public function run(): int {
+    if ($this->interrupts->isNmiAssert()) {
+      $this->processNmi();
     }
-    private function debug($opcode)
-    {
+    if ($this->interrupts->isIrqAssert()) {
+      $this->processIrq();
+    }
+    $opcode = $this->fetch($this->registers->pc, 'Byte');
+    $ocp = $this->opCodeList[$opcode];
+    $data = $this->getAddrOrDataWithAdditionalCycle($ocp->mode);
+    $this->execInstruction($ocp->baseName, $data->addrOrData, $ocp->mode);
+    return $ocp->cycle + $data->additionalCycle + ($this->hasBranched ? 1 : 0);
+  }
+
+/*
+  private function debug(string $opcode): void {
         printf(
             "Invalid opcode: %s in pc: %04x\n",
             dechex($opcode),
@@ -691,4 +737,5 @@ final class Cpu {
             }
         }
     }
+*/
 }

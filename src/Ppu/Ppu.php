@@ -2,9 +2,9 @@
 
 namespace Ytake\Nes\Ppu;
 
-use Ytake\Nes\Bus\PpuBus;
-use Ytake\Nes\Bus\Ram;
-use Ytake\Nes\Cpu\Interrupts;
+use type Ytake\Nes\Bus\PpuBus;
+use type Ytake\Nes\Bus\Ram;
+use type Ytake\Nes\Cpu\Interrupts;
 
 use function array_fill;
 use function intval;
@@ -105,8 +105,8 @@ class Ppu {
   public int $scrollY = 0;
 
   public function __construct(
-    public PpuBus $bus, 
-    public Interrupts $interrupts, 
+    public PpuBus $bus,
+    public Interrupts $interrupts,
     public bool $isHorizontalMirror
   ) {
     $this->registers = dict(array_fill(0, 7, 0));
@@ -173,7 +173,7 @@ class Ppu {
   }
 
   public function tileY(): int {
-    return ~~(intval($this->line / 8)) + $this->scrollTileY(); 
+    return ~~(intval($this->line / 8)) + $this->scrollTileY();
   }
 
   public function backgroundTableOffset(): int {

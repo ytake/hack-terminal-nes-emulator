@@ -12,8 +12,8 @@ use function floor;
 use function printf;
 use function fprintf;
 
-class NullCanvas implements CanvasInterface, \IDisposable {
-    
+class NullCanvas extends AbstractDisposeCanvas {
+
   private resource $fp;
   private int $frame = 0;
   private float $last = -1.0;
@@ -33,7 +33,7 @@ class NullCanvas implements CanvasInterface, \IDisposable {
   }
 
   public function draw(
-    vec<int> $frameBuffer
+    vec<int> $_frameBuffer
   ): void {
     $microTime = microtime(true);
     $second = floor($microTime);

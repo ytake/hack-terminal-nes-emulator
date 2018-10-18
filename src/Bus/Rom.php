@@ -16,7 +16,7 @@ class Rom {
   ) {
     $this->rom = $data;
   }
-  
+
   public function size(): int {
     return count($this->rom);
   }

@@ -2,8 +2,8 @@
 
 namespace Ytake\Nes\Cpu;
 
-use Ytake\Nes\Bus\Ram;
-use Ytake\Nes\Ppu\Ppu;
+use type Ytake\Nes\Bus\Ram;
+use type Ytake\Nes\Ppu\Ppu;
 
 class Dma
 {
@@ -11,7 +11,7 @@ class Dma
   public int $ramAddr = 0x0000;
 
   public function __construct(
-    public Ram $ram, 
+    public Ram $ram,
     public Ppu $ppu
   ) {}
 

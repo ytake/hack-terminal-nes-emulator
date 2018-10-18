@@ -2,8 +2,8 @@
 
 namespace Ytake\Nes\Bus;
 
-use Ytake\Nes\Cpu\Dma;
-use Ytake\Nes\Ppu\Ppu;
+use type Ytake\Nes\Cpu\Dma;
+use type Ytake\Nes\Ppu\Ppu;
 
 final class CpuBus {
 

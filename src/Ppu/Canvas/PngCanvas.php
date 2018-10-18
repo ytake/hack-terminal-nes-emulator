@@ -10,13 +10,18 @@ use function mkdir;
 use function imagepng;
 use function sprintf;
 
-class PngCanvas implements CanvasInterface {
+class PngCanvas extends AbstractDisposeCanvas {
   private int $serial = 0;
+
+  <<__Memoize>>
+  private function imageColor(): resource {
+    return imagecreatetruecolor(256, 224);
+  }
 
   public function draw(
     vec<int> $frameBuffer
   ): void {
-    $image = imagecreatetruecolor(256, 224);
+    $image = $this->imageColor();
     for ($y = 0; $y < 224; $y++) {
       for ($x = 0; $x < 256; $x++) {
         $index = ($x + ($y * 0x100)) * 4;
@@ -33,5 +38,9 @@ class PngCanvas implements CanvasInterface {
       mkdir('screen');
     }
     imagepng($image, sprintf("screen/%08d.png", $this->serial++));
+  }
+
+  public function __dispose(): void {
+
   }
 }

@@ -5,7 +5,7 @@ use type Facebook\HackTest\HackTest;
 use function Facebook\FBExpect\expect;
 
 final class OpCodeTest extends HackTest {
-  
+
   public function testIsBackgroundMirror(): void {
     $o = new OpCode();
     expect($o->getOpCodes())->toBeSame($o->getOpCodes());

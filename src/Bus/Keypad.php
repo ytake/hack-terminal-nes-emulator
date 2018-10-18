@@ -9,11 +9,9 @@ use function array_fill;
 use function fread;
 use function array_search;
 
-class Keypad
-{
+class Keypad {
 
   public mixed $file;
-
   public string $keyPressing = '';
 
   public vec<bool> $keyBuffer = vec[];
@@ -37,7 +35,7 @@ class Keypad
       $this->keyDown($key);
     } elseif ($this->keyPressing !== '') {
       $this->keyUp($this->keyPressing);
-    } 
+    }
     $this->keyPressing = $key;
   }
 
@@ -64,7 +62,7 @@ class Keypad
     }
     return $keyIndex;
   }
-  
+
   public function write(int $data): void {
     if ($data & 0x01) {
       $this->isSet = true;

@@ -8,16 +8,16 @@ use function time;
 use function html_entity_decode;
 use function array_fill;
 use function intval;
-use function strval;
 use function is_null;
 
 use const ENT_NOQUOTES;
 use const PHP_EOL;
 
-newtype EntityDecodeTuple = ImmVector<string>; 
+newtype EntityDecodeTuple = ImmVector<string>;
 
-class TerminalCanvas implements CanvasInterface {
+class TerminalCanvas extends AbstractDisposeCanvas {
     protected string $brailleCharOffset;
+
     protected int $currentSecond = 0;
     protected int $framesInSecond = 0;
     protected int $fps = 0;
@@ -66,7 +66,7 @@ class TerminalCanvas implements CanvasInterface {
     vec<int> $canvasBuffer
   ): void {
     //Calculate current FPS
-    if ($this->currentSecond != time()) {
+    if ($this->currentSecond !== time()) {
       $this->fps = $this->framesInSecond;
       $this->currentSecond = time();
       $this->framesInSecond = 1;
@@ -78,7 +78,7 @@ class TerminalCanvas implements CanvasInterface {
     $charWidth = intval($screenWidth / 2);
     $charHeight = intval($screenHeight / 4);
 
-    if ($canvasBuffer != $this->lastFrameCanvasBuffer) {
+    if ($canvasBuffer !== $this->lastFrameCanvasBuffer) {
       $chars = array_fill(0, $screenWidth * $screenHeight, $this->brailleCharOffset);
       $frame = '';
       for ($y = 0; $y < $screenHeight; $y++) {
@@ -114,16 +114,20 @@ class TerminalCanvas implements CanvasInterface {
       $this->lastFrameCanvasBuffer = $canvasBuffer;
       $content = "\e[H\e[2J";
       if ($this->height > 0 && $this->width > 0) {
-        $content = "\e[{$this->height}A\e[{$this->width}D";
+        $content = "\e[".$this->height."A\e[".$this->width."D";
       }
       $content .= sprintf(
-        "FPS: %3d - Frame Skip: %3d\n", 
-        $this->fps, 
+        "FPS: %3d - Frame Skip: %3d\n",
+        $this->fps,
         $this->framesInSecond
       ) . $frame;
       echo $content;
       $this->height = $charHeight + 1;
       $this->width = $charWidth;
     }
+  }
+
+  public function __dispose(): void {
+
   }
 }
