@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Ppu\Canvas;
+namespace Hes\Ppu\Canvas;
 
 use function sprintf;
 use function floor;
