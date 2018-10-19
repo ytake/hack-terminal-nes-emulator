@@ -1,11 +1,11 @@
 <?hh // strict
 
-use type Ytake\Nes\Ppu\Palette;
+use type Hes\Ppu\Palette;
 use type Facebook\HackTest\HackTest;
 use function Facebook\FBExpect\expect;
 
 final class PaletteTest extends HackTest {
-  
+
   private ?Palette $palette;
 
   <<__Override>>

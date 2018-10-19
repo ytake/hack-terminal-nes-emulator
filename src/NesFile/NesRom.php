@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\NesFile;
+namespace Hes\NesFile;
 
 final class NesRom {
 

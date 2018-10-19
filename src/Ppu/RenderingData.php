@@ -1,12 +1,12 @@
 <?hh // strict
 
-namespace Ytake\Nes\Ppu;
+namespace Hes\Ppu;
 
 final class RenderingData {
 
   public function __construct(
-    public dict<int, mixed> $palette, 
-    public ?Map<int, Tile> $background, 
-    public ?Map<int, SpriteWithAttribute> $sprites
+    public dict<int, mixed> $palette,
+    public ?vec<Tile> $background,
+    public ?dict<int, SpriteWithAttribute> $sprites
   ) { }
 }

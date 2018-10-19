@@ -1,5 +1,5 @@
 assume_php=false
-ignored_paths = [ "vendor/.+/tests/.+" ]
+ignored_paths = [ "vendor/.+/tests/.+", "vendor/hhvm/hhast/.+/.+" ]
 safe_array = true
 safe_vector_array = true
 unsafe_rx = false

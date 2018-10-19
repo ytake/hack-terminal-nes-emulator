@@ -1,15 +1,13 @@
 <?hh // strict
 
-namespace Ytake\Nes\NesFile;
+namespace Hes\NesFile;
 
-use namespace HH\Lib\Vec;
-use type Ytake\Nes\Exception\NesFormatException;
+use namespace HH\Lib\{Vec, C, Str};
+use type Hes\Exception\NesFormatException;
 
 use function substr;
-use function strlen;
 use function ord;
 use function printf;
-use function count;
 use function dechex;
 
 class NesFile {
@@ -19,14 +17,12 @@ class NesFile {
   const int CHARACTER_ROM_SIZE = 0x2000;
 
   public static function parse(string $nesBuffer): NesRom {
-    if (substr($nesBuffer, 0, 3) !== 'NES') {
-      throw new NesFormatException('This file is not NES format.');
-    }
+    self::invariantNes($nesBuffer);
     $nes = vec[];
-    for ($i = 0; $i < strlen($nesBuffer); ++$i) {
+    for ($i = 0; $i < Str\length($nesBuffer); ++$i) {
       $nes[$i] = (ord($nesBuffer[$i]) & 0xFF);
     }
-    printf("Rom size: %d (0x%s)\n", count($nes), dechex(count($nes)));
+    printf("Rom size: %d (0x%s)\n", C\count($nes), dechex(C\count($nes)));
     $programRomPages = $nes[4];
     printf("Program ROM pages: %d\n", $programRomPages);
     $characterRomPages = $nes[5];
@@ -46,14 +42,21 @@ class NesFile {
     );
     printf(
       "Program   ROM: 0x0000 - 0x%s (%d bytes)\n",
-      dechex(count($nesRom->programRom)),
-      count($nesRom->programRom)
+      dechex(C\count($nesRom->programRom)),
+      C\count($nesRom->programRom)
     );
     printf(
       "Character ROM: 0x0000 - 0x%s (%d bytes)\n",
-      dechex(count($nesRom->characterRom)),
-      count($nesRom->characterRom)
+      dechex(C\count($nesRom->characterRom)),
+      C\count($nesRom->characterRom)
     );
     return $nesRom;
+  }
+
+  <<__Rx>>
+  private static function invariantNes(string $buff): void {
+    if (substr($buff, 0, 3) !== 'NES') {
+      throw new NesFormatException('This file is not NES format.');
+    }
   }
 }

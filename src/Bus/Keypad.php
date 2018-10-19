@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Bus;
+namespace Hes\Bus;
 
 use function exec;
 use function fopen;
@@ -9,11 +9,9 @@ use function array_fill;
 use function fread;
 use function array_search;
 
-class Keypad
-{
+class Keypad {
 
   public mixed $file;
-
   public string $keyPressing = '';
 
   public vec<bool> $keyBuffer = vec[];
@@ -37,7 +35,7 @@ class Keypad
       $this->keyDown($key);
     } elseif ($this->keyPressing !== '') {
       $this->keyUp($this->keyPressing);
-    } 
+    }
     $this->keyPressing = $key;
   }
 
@@ -54,7 +52,8 @@ class Keypad
       $this->keyBuffer[$keyIndex] = false;
     }
   }
-
+  
+  <<__Rx>>
   public function matchKey(string $key): int {
     //Maps a keyboard key to a nes key.
     // A, B, SELECT, START, ↑, ↓, ←, →
@@ -64,7 +63,7 @@ class Keypad
     }
     return $keyIndex;
   }
-  
+
   public function write(int $data): void {
     if ($data & 0x01) {
       $this->isSet = true;

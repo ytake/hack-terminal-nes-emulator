@@ -1,17 +1,18 @@
 <?hh // strict
 
-namespace Ytake\Nes\Cpu;
+namespace Hes\Cpu;
 
 final class Interrupts {
 
   private bool $nmi = false;
-
   private bool $irq = false;
 
+  <<__Rx>>
   public function isNmiAssert(): bool {
     return $this->nmi;
   }
 
+  <<__Rx>>
   public function isIrqAssert(): bool {
     return $this->irq;
   }

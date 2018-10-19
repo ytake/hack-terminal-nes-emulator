@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Bus;
+namespace Hes\Bus;
 
 class PpuBus {
 
@@ -8,6 +8,7 @@ class PpuBus {
     public Ram $characterRam
   ) { }
 
+  <<__Rx>>
   public function readByPpu(int $addr): int {
     return $this->characterRam->read($addr);
   }

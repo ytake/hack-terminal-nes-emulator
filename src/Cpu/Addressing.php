@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Cpu;
+namespace Hes\Cpu;
 
 enum Addressing: string as string {
   Immediate = 'immediate';
