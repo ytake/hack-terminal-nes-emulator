@@ -1,10 +1,9 @@
 <?hh // strict
 
-namespace Ytake\Nes\Bus;
+namespace Hes\Bus;
 
 use namespace HH\Lib\C;
 
-use function count;
 use function array_key_exists;
 use function sprintf;
 use function dechex;
@@ -18,12 +17,12 @@ class Rom {
   ) {
     $this->rom = $data;
   }
-  
+
   <<__Rx>>
   public function size(): int {
     return C\count($this->rom);
   }
-  
+
   <<__Rx>>
   public function read(int $addr): int {
     if (!array_key_exists($addr, $this->rom)) {

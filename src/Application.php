@@ -1,21 +1,16 @@
 <?hh // strict
 
-namespace Ytake\Nes;
+namespace Hes;
 
-use type Facebook\CLILib\CLIBase;
+use type Hes\Nes;
 use type Facebook\CLILib\CLIWithRequiredArguments;
 use namespace HH\Lib\Str;
 use namespace Facebook\CLILib\CLIOptions;
-use namespace Ytake\Nes\Ppu\Canvas;
 
 use const PHP_EOL;
-use function ucfirst;
-use function strtolower;
-use function sprintf;
-use function array_key_exists;
 
 final class Application extends CLIWithRequiredArguments {
-  
+
   private string $canvas = '';
 
   <<__Override>>
@@ -28,7 +23,7 @@ final class Application extends CLIWithRequiredArguments {
     $arg = $this->getArguments();
     $filename = $arg[0];
     if ($this->canvas !== '') {
-      $nes = new \Ytake\Nes\Nes(
+      $nes = new Nes(
         Str\capitalize(Str\lowercase($this->canvas))
       );
       try {

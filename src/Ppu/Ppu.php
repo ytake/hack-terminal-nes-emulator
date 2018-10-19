@@ -1,10 +1,10 @@
 <?hh // strict
 
-namespace Ytake\Nes\Ppu;
+namespace Hes\Ppu;
 
-use type Ytake\Nes\Bus\PpuBus;
-use type Ytake\Nes\Bus\Ram;
-use type Ytake\Nes\Cpu\Interrupts;
+use type Hes\Bus\PpuBus;
+use type Hes\Bus\Ram;
+use type Hes\Cpu\Interrupts;
 
 use function array_fill;
 use function intval;

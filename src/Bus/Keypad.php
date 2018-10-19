@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Bus;
+namespace Hes\Bus;
 
 use function exec;
 use function fopen;
@@ -52,7 +52,8 @@ class Keypad {
       $this->keyBuffer[$keyIndex] = false;
     }
   }
-
+  
+  <<__Rx>>
   public function matchKey(string $key): int {
     //Maps a keyboard key to a nes key.
     // A, B, SELECT, START, ↑, ↓, ←, →

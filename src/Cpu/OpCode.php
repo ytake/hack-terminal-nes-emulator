@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Cpu;
+namespace Hes\Cpu;
 
 final class OpCode {
 
@@ -23,7 +23,7 @@ final class OpCode {
     2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,
   };
 
-  <<__Memoize>>
+  <<__Memoize, Rx>>
   public function getOpCodes(): ImmMap<string, OpCodeProps> {
     return ImmMap{
       'A9' => new OpCodeProps('LDA_IMM', 'LDA', Addressing::Immediate, $this->cycle[0xA9]),

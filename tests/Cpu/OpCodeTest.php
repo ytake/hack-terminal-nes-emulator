@@ -1,6 +1,6 @@
 <?hh // strict
 
-use type Ytake\Nes\Cpu\OpCode;
+use type Hes\Cpu\OpCode;
 use type Facebook\HackTest\HackTest;
 use function Facebook\FBExpect\expect;
 

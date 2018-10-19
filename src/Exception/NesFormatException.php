@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Exception;
+namespace Hes\Exception;
 
 final class NesFormatException extends \RuntimeException {
 

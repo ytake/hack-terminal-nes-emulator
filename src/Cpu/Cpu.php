@@ -1,12 +1,12 @@
 <?hh // strict
 
-namespace Ytake\Nes\Cpu;
+namespace Hes\Cpu;
 
-use type Ytake\Nes\Bus\CpuBus;
-use type Ytake\Nes\Cpu\Registers\AddrOrDataAndAdditionalCycle;
-use type Ytake\Nes\Cpu\Registers\Registers;
-use type Ytake\Nes\Cpu\Registers\Status;
-use type Ytake\Nes\Exception\UnknownAddressException;
+use type Hes\Bus\CpuBus;
+use type Hes\Cpu\Registers\AddrOrDataAndAdditionalCycle;
+use type Hes\Cpu\Registers\Registers;
+use type Hes\Cpu\Registers\Status;
+use type Hes\Exception\UnknownAddressException;
 
 use function printf;
 use function hexdec;
@@ -44,32 +44,26 @@ final class Cpu {
     printf("Initial pc: %04x\n", $this->registers->pc);
   }
 
-    /**
-     * @param \Nes\Cpu\Addressing $mode
-     *
-     * @return \Nes\Cpu\Registers\AddrOrDataAndAdditionalCycle
-     * @throws \Exception
-     */
-    public function getAddrOrDataWithAdditionalCycle(
-      Addressing $mode
-    ): AddrOrDataAndAdditionalCycle {
-      switch (\strval($mode)) {
-        case Addressing::Accumulator:
-          return new AddrOrDataAndAdditionalCycle(0x00, 0);
-        case Addressing::Implied:
-          return new AddrOrDataAndAdditionalCycle(0x00, 0);
-        case Addressing::Immediate:
-          return new AddrOrDataAndAdditionalCycle($this->fetch($this->registers->pc), 0);
-        case Addressing::Relative:
-          $baseAddr = $this->fetch($this->registers->pc);
-          $addr = $baseAddr < 0x80 ? $baseAddr + $this->registers->pc : $baseAddr + $this->registers->pc - 256;
+  public function getAddrOrDataWithAdditionalCycle(
+    Addressing $mode
+  ): AddrOrDataAndAdditionalCycle {
+    switch (\strval($mode)) {
+      case Addressing::Accumulator:
+        return new AddrOrDataAndAdditionalCycle(0x00, 0);
+      case Addressing::Implied:
+        return new AddrOrDataAndAdditionalCycle(0x00, 0);
+      case Addressing::Immediate:
+        return new AddrOrDataAndAdditionalCycle($this->fetch($this->registers->pc), 0);
+      case Addressing::Relative:
+        $baseAddr = $this->fetch($this->registers->pc);
+        $addr = $baseAddr < 0x80 ? $baseAddr + $this->registers->pc : $baseAddr + $this->registers->pc - 256;
         return new AddrOrDataAndAdditionalCycle(
           $addr,
           ($addr & 0xff00) !== ($this->registers->pc & 0xFF00) ? 1 : 0
         );
-        case Addressing::ZeroPage:
-          return new AddrOrDataAndAdditionalCycle($this->fetch($this->registers->pc), 0);
-        case Addressing::ZeroPageX:
+      case Addressing::ZeroPage:
+        return new AddrOrDataAndAdditionalCycle($this->fetch($this->registers->pc), 0);
+      case Addressing::ZeroPageX:
           $addr = $this->fetch($this->registers->pc);
           return new AddrOrDataAndAdditionalCycle(
             ($addr + $this->registers->x) & 0xff,
@@ -89,25 +83,25 @@ final class Cpu {
           $additionalCycle = ($addr & 0xFF00) !== (($addr + $this->registers->y) & 0xFF00) ? 1 : 0;
           return new AddrOrDataAndAdditionalCycle(($addr + $this->registers->y) & 0xFFFF, $additionalCycle);
         case Addressing::PreIndexedIndirect:
-                $baseAddr = ($this->fetch($this->registers->pc) + $this->registers->x) & 0xFF;
-                $addr = $this->read($baseAddr) + ($this->read(($baseAddr + 1) & 0xFF) << 8);
-                return new AddrOrDataAndAdditionalCycle(
-                    $addr & 0xFFFF,
-                    ($addr & 0xFF00) !== ($baseAddr & 0xFF00) ? 1 : 0
-                );
-            case Addressing::PostIndexedIndirect:
-                $addrOrData = $this->fetch($this->registers->pc);
-                $baseAddr = $this->read($addrOrData) + ($this->read(($addrOrData + 1) & 0xFF) << 8);
-                $addr = $baseAddr + $this->registers->y;
-                return new AddrOrDataAndAdditionalCycle(
-                    $addr & 0xFFFF,
-                    ($addr & 0xFF00) !== ($baseAddr & 0xFF00) ? 1 : 0
-                );
-            case Addressing::IndirectAbsolute:
-                $addrOrData = $this->fetch($this->registers->pc, "Word");
-                $addr = $this->read($addrOrData) +
-                    ($this->read(($addrOrData & 0xFF00) | ((($addrOrData & 0xFF) + 1) & 0xFF)) << 8);
-                return new AddrOrDataAndAdditionalCycle($addr & 0xFFFF, 0);
+          $baseAddr = ($this->fetch($this->registers->pc) + $this->registers->x) & 0xFF;
+          $addr = $this->read($baseAddr) + ($this->read(($baseAddr + 1) & 0xFF) << 8);
+          return new AddrOrDataAndAdditionalCycle(
+            $addr & 0xFFFF,
+            ($addr & 0xFF00) !== ($baseAddr & 0xFF00) ? 1 : 0
+          );
+        case Addressing::PostIndexedIndirect:
+          $addrOrData = $this->fetch($this->registers->pc);
+          $baseAddr = $this->read($addrOrData) + ($this->read(($addrOrData + 1) & 0xFF) << 8);
+          $addr = $baseAddr + $this->registers->y;
+          return new AddrOrDataAndAdditionalCycle(
+            $addr & 0xFFFF,
+            ($addr & 0xFF00) !== ($baseAddr & 0xFF00) ? 1 : 0
+          );
+        case Addressing::IndirectAbsolute:
+          $addrOrData = $this->fetch($this->registers->pc, "Word");
+          $addr = $this->read($addrOrData)
+            + ($this->read(($addrOrData & 0xFF00) | ((($addrOrData & 0xFF) + 1) & 0xFF)) << 8);
+          return new AddrOrDataAndAdditionalCycle($addr & 0xFFFF, 0);
       default:
         echo($mode);
         throw new UnknownAddressException("Unknown addressing ".$mode." detected.");
@@ -694,48 +688,4 @@ final class Cpu {
     $this->execInstruction($ocp->baseName, $data->addrOrData, $ocp->mode);
     return $ocp->cycle + $data->additionalCycle + ($this->hasBranched ? 1 : 0);
   }
-
-/*
-  private function debug(string $opcode): void {
-        printf(
-            "Invalid opcode: %s in pc: %04x\n",
-            dechex($opcode),
-            $this->registers->pc
-        );
-        if ($this->registers->pc < 0x0800) {
-            Debugger::dump($this->bus->ram->ram);
-        } else {
-            if ($this->registers->pc < 0x2000) {
-                printf("Redirect ram: %04x\n", $this->registers->pc - 0x0800);
-                Debugger::dump($this->bus->ram->ram);
-            } else {
-                if ($this->registers->pc < 0x4000) {
-                    printf("Ppu: %04x\n", ($this->registers->pc - 0x2000) % 8);
-                    Debugger::dump($this->bus->ppu->registers);
-                } else {
-                    if ($this->registers->pc === 0x4016) {
-                        printf("Keypad\n");
-                    } else {
-                        if ($this->registers->pc >= 0xC000) {
-                            if ($this->bus->programRom->size() <= 0x4000) {
-                                printf("Redirect program rom: %04x\n", $this->registers->pc - 0xC000);
-                                Debugger::dump($this->bus->programRom->rom);
-                            } else {
-                                printf("Redirect program rom: %04x\n", $this->registers->pc - 0x8000);
-                                Debugger::dump($this->bus->programRom->rom);
-                            }
-                        } else {
-                            if ($this->registers->pc >= 0x8000) {
-                                printf("Redirect program rom: %04x\n", $this->registers->pc - 0x8000);
-                                Debugger::dump($this->bus->programRom->rom);
-                            } else {
-                                printf("Something wrong...\n");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-*/
 }

@@ -2,7 +2,7 @@
   "name": "ytake/hack-terminal-nes-emulator",
   "description": "A HHVM/Hack terminal NES emulator",
   "keywords": ["hack", "terminal", "console", "nes", "emulator"],
-  "homepage": "http://github.com/ytake/php-terminal-nes-emulator",
+  "homepage": "http://github.com/ytake/hack-terminal-nes-emulator",
   "license": "MIT",
   "require": {
     "hhvm": ">=3.28",
@@ -17,7 +17,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Ytake\\Nes\\": "src/"
+      "Hes\\": "src/"
     }
   },
   "autoload-dev": {

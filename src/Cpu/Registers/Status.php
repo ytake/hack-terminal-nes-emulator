@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Cpu\Registers;
+namespace Hes\Cpu\Registers;
 
 final class Status {
 

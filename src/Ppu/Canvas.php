@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Ppu;
+namespace Hes\Ppu;
 
 enum Canvas: string as string {
   TERMINAL = 'terminal';

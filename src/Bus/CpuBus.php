@@ -1,9 +1,9 @@
 <?hh // strict
 
-namespace Ytake\Nes\Bus;
+namespace Hes\Bus;
 
-use type Ytake\Nes\Cpu\Dma;
-use type Ytake\Nes\Ppu\Ppu;
+use type Hes\Cpu\Dma;
+use type Hes\Ppu\Ppu;
 
 final class CpuBus {
 

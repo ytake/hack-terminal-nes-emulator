@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Exception;
+namespace Hes\Exception;
 
 final class UnknownAddressException extends \RuntimeException {
 

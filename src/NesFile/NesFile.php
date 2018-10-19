@@ -1,15 +1,13 @@
 <?hh // strict
 
-namespace Ytake\Nes\NesFile;
+namespace Hes\NesFile;
 
 use namespace HH\Lib\{Vec, C, Str};
-use type Ytake\Nes\Exception\NesFormatException;
+use type Hes\Exception\NesFormatException;
 
 use function substr;
-use function strlen;
 use function ord;
 use function printf;
-use function count;
 use function dechex;
 
 class NesFile {
@@ -17,7 +15,7 @@ class NesFile {
   const int NES_HEADER_SIZE = 0x0010;
   const int PROGRAM_ROM_SIZE = 0x4000;
   const int CHARACTER_ROM_SIZE = 0x2000;
-  
+
   public static function parse(string $nesBuffer): NesRom {
     self::invariantNes($nesBuffer);
     $nes = vec[];

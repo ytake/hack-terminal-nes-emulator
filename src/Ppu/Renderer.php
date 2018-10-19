@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Ppu;
+namespace Hes\Ppu;
 
 use namespace HH\Lib\C;
 
@@ -80,7 +80,7 @@ class Renderer {
     ImmVector{0x11, 0x11, 0x11},
     ImmVector{0x11, 0x11, 0x11},
   };
-  
+
   private dict<string, classname<Canvas\AbstractDisposeCanvas>> $v = dict[
     'terminal' => Canvas\TerminalCanvas::class,
     'null' =>  Canvas\NullCanvas::class,
@@ -119,7 +119,7 @@ class Renderer {
     if ($data->sprites is dict<_, _>) {
       $this->renderSprites($data->sprites, $data->palette);
     }
-    
+
     $cn = Canvas\TerminalCanvas::class;
     if(array_key_exists($canvas, $this->v)) {
       $cn = $this->v[$canvas];

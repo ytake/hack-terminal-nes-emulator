@@ -16,14 +16,14 @@ use const PHP_EOL;
 newtype EntityDecodeTuple = ImmVector<string>;
 
 class TerminalCanvas extends AbstractDisposeCanvas {
-    protected string $brailleCharOffset;
 
-    protected int $currentSecond = 0;
-    protected int $framesInSecond = 0;
-    protected int $fps = 0;
-    protected int $height = 0;
-    protected string $lastFrame = '';
-    protected vec<int> $lastFrameCanvasBuffer = vec[];
+  protected string $brailleCharOffset = '';
+  protected int $currentSecond = 0;
+  protected int $framesInSecond = 0;
+  protected int $fps = 0;
+  protected int $height = 0;
+  protected string $lastFrame = '';
+  protected vec<int> $lastFrameCanvasBuffer = vec[];
     /**
      * Braille Pixel Matrix
      *   ,___,
@@ -34,34 +34,17 @@ class TerminalCanvas extends AbstractDisposeCanvas {
      *   `````
      * @var array
      */
-    protected ImmVector<ImmVector<string>> $pixelMap = ImmVector{};
-    protected int $width = 0;
-
-    public int $threshold = 127;
-    public int $frameSkip = 0;
+  protected ImmVector<ImmVector<string>> $pixelMap = ImmVector{};
+  protected int $width = 0;
+  public int $threshold = 127;
+  public int $frameSkip = 0;
 
   public function __construct() {
     $this->brailleCharOffset = html_entity_decode('&#' . (0x2800) . ';', ENT_NOQUOTES, 'UTF-8');
-    $this->pixelMap = new ImmVector([
-      ImmVector{
-        html_entity_decode('&#' . (0x2801) . ';', ENT_NOQUOTES, 'UTF-8'),
-        html_entity_decode('&#' . (0x2808) . ';', ENT_NOQUOTES, 'UTF-8')
-      },
-      ImmVector{
-        html_entity_decode('&#' . (0x2802) . ';', ENT_NOQUOTES, 'UTF-8'),
-        html_entity_decode('&#' . (0x2810) . ';', ENT_NOQUOTES, 'UTF-8')
-      },
-      ImmVector{
-        html_entity_decode('&#' . (0x2804) . ';', ENT_NOQUOTES, 'UTF-8'),
-        html_entity_decode('&#' . (0x2820) . ';', ENT_NOQUOTES, 'UTF-8')
-      },
-      ImmVector{
-        html_entity_decode('&#' . (0x2840) . ';', ENT_NOQUOTES, 'UTF-8'),
-        html_entity_decode('&#' . (0x2880) . ';', ENT_NOQUOTES, 'UTF-8')
-      },
-    ]);
+    $this->pixelMap = $this->matrix();
   }
 
+  <<__Override>>
   public function draw(
     vec<int> $canvasBuffer
   ): void {
@@ -127,7 +110,30 @@ class TerminalCanvas extends AbstractDisposeCanvas {
     }
   }
 
+  <<__Override>>
   public function __dispose(): void {
 
+  }
+
+  <<__Memoize>>
+  private function matrix(): ImmVector<ImmVector<string>> {
+    return ImmVector{
+      ImmVector{
+        html_entity_decode('&#' . (0x2801) . ';', ENT_NOQUOTES, 'UTF-8'),
+        html_entity_decode('&#' . (0x2808) . ';', ENT_NOQUOTES, 'UTF-8')
+      },
+      ImmVector{
+        html_entity_decode('&#' . (0x2802) . ';', ENT_NOQUOTES, 'UTF-8'),
+        html_entity_decode('&#' . (0x2810) . ';', ENT_NOQUOTES, 'UTF-8')
+      },
+      ImmVector{
+        html_entity_decode('&#' . (0x2804) . ';', ENT_NOQUOTES, 'UTF-8'),
+        html_entity_decode('&#' . (0x2820) . ';', ENT_NOQUOTES, 'UTF-8')
+      },
+      ImmVector{
+        html_entity_decode('&#' . (0x2840) . ';', ENT_NOQUOTES, 'UTF-8'),
+        html_entity_decode('&#' . (0x2880) . ';', ENT_NOQUOTES, 'UTF-8')
+      },
+    };
   }
 }

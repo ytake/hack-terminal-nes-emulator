@@ -1,6 +1,6 @@
 <?hh // strict
 
-use type Ytake\Nes\Ppu\Palette;
+use type Hes\Ppu\Palette;
 use type Facebook\HackTest\HackTest;
 use function Facebook\FBExpect\expect;
 

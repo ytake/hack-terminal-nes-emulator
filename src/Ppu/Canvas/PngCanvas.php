@@ -18,6 +18,7 @@ class PngCanvas extends AbstractDisposeCanvas {
     return imagecreatetruecolor(256, 224);
   }
 
+  <<__Override>>
   public function draw(
     vec<int> $frameBuffer
   ): void {
@@ -40,6 +41,7 @@ class PngCanvas extends AbstractDisposeCanvas {
     imagepng($image, sprintf("screen/%08d.png", $this->serial++));
   }
 
+  <<__Override>>
   public function __dispose(): void {
 
   }

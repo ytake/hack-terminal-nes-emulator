@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Cpu;
+namespace Hes\Cpu;
 
 final class OpCodeProps {
 

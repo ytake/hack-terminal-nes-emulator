@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Ytake\Nes\Ppu;
+namespace Hes\Ppu;
 
 final class SpriteWithAttribute {
 

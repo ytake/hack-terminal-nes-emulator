@@ -1,9 +1,9 @@
 <?hh // strict
 
-namespace Ytake\Nes\Cpu;
+namespace Hes\Cpu;
 
-use type Ytake\Nes\Bus\Ram;
-use type Ytake\Nes\Ppu\Ppu;
+use type Hes\Bus\Ram;
+use type Hes\Ppu\Ppu;
 
 class Dma
 {
@@ -14,7 +14,7 @@ class Dma
     public Ram $ram,
     public Ppu $ppu
   ) {}
-  
+
   <<__Rx>>
   public function isDmaProcessing(): bool {
     return $this->isProcessing;

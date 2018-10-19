@@ -1,8 +1,8 @@
 <?hh // strict
 
-namespace Ytake\Nes\Ppu;
+namespace Hes\Ppu;
 
-use type Ytake\Nes\Bus\Ram;
+use type Hes\Bus\Ram;
 
 class Palette {
 

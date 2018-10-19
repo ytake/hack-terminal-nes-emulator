@@ -28,10 +28,12 @@ class NullCanvas extends AbstractDisposeCanvas {
     $this->initial = time();
   }
 
+  <<__Override>>
   public function __dispose(): void {
     fclose($this->fp);
   }
 
+  <<__Override>>
   public function draw(
     vec<int> $_frameBuffer
   ): void {
