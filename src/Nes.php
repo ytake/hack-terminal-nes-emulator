@@ -15,6 +15,7 @@ use type Ytake\Nes\Cpu\Interrupts;
 use type Ytake\Nes\Bus\Keypad;
 use type Ytake\Nes\NesFile\NesFile;
 use type Ytake\Nes\Ppu\Canvas\CanvasInterface;
+use type Ytake\Nes\Ppu\Canvas\AbstractDisposeCanvas;
 use type Ytake\Nes\Ppu\Ppu;
 use type Ytake\Nes\Ppu\Renderer;
 
@@ -47,9 +48,9 @@ class Nes {
   public ?Interrupts $interrupts;
 
   public function __construct(
-    classname<CanvasInterface> $canvas
+    protected string $canvas
   ) {
-    $this->renderer = new Renderer($canvas);
+    $this->renderer = new Renderer();
   }
 
     //
@@ -75,8 +76,7 @@ class Nes {
     if (! is_file($nesRomFilename)) {
       throw new \RuntimeException('Nes ROM file not found.');
     }
-    $nesRomBinary = file_get_contents($nesRomFilename);
-    $nesRom = NesFile::parse($nesRomBinary);
+    $nesRom = NesFile::parse(file_get_contents($nesRomFilename));
     $keypad = new Keypad();
     $ram = new Ram(2048);
     $characterMem = new Ram(0x4000);
@@ -106,10 +106,7 @@ class Nes {
     }
   }
 
-    /**
-     * @throws \Exception
-     */
-  public function frame(): void {
+  private function frame(): void {
     while (true) {
       $cycle = 0;
       $dma = $this->dma;
@@ -124,7 +121,7 @@ class Nes {
         $renderingData = $ppu->run($cycle * 3);
         if ($renderingData) {
           $cpu->bus->keypad->fetch();
-          $this->renderer->render($renderingData);
+          $this->renderer->render($renderingData, $this->canvas);
           break;
         }
       }

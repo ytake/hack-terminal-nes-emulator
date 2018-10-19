@@ -42,6 +42,6 @@ class NullCanvas extends AbstractDisposeCanvas {
       $this->frame = 0;
     }
     fprintf($this->fp, "%-8.2f frame %d\n", $microTime, $this->frame++);
-      $this->last = floor($microTime);
+    $this->last = floor($microTime);
   }
 }

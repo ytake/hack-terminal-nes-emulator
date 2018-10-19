@@ -14,7 +14,8 @@ class Dma
     public Ram $ram,
     public Ppu $ppu
   ) {}
-
+  
+  <<__Rx>>
   public function isDmaProcessing(): bool {
     return $this->isProcessing;
   }

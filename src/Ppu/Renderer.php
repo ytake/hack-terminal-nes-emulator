@@ -3,11 +3,10 @@
 namespace Ytake\Nes\Ppu;
 
 use namespace HH\Lib\C;
-use type Ytake\Nes\Ppu\Canvas\CanvasInterface;
-use type Ytake\Nes\Ppu\Canvas\AbstractDisposeCanvas;
 
 use function array_fill;
 use function intval;
+use function array_key_exists;
 
 class Renderer {
 
@@ -81,9 +80,14 @@ class Renderer {
     ImmVector{0x11, 0x11, 0x11},
     ImmVector{0x11, 0x11, 0x11},
   };
+  
+  private dict<string, classname<Canvas\AbstractDisposeCanvas>> $v = dict[
+    'terminal' => Canvas\TerminalCanvas::class,
+    'null' =>  Canvas\NullCanvas::class,
+    'png' => Canvas\PngCanvas::class,
+  ];
 
   public function __construct(
-    public classname<AbstractDisposeCanvas> $canvas
   ) {
     $this->frameBuffer = vec(array_fill(0, 256 * 256 * 4, 0)); // 256 x 240
   }
@@ -105,16 +109,24 @@ class Renderer {
     }
   }
 
-  public function render(RenderingData $data): void {
+  public function render(
+    RenderingData $data,
+    string $canvas
+  ): void {
     if ($data->background is vec<_>) {
       $this->renderBackground($data->background, $data->palette);
     }
     if ($data->sprites is dict<_, _>) {
       $this->renderSprites($data->sprites, $data->palette);
     }
-    $canvas = $this->canvas;
-    new $canvas();
-    $this->canvas->draw($this->frameBuffer);
+    
+    $cn = Canvas\TerminalCanvas::class;
+    if(array_key_exists($canvas, $this->v)) {
+      $cn = $this->v[$canvas];
+    }
+    using ($cv = new $cn()) {
+      $cv->draw($this->frameBuffer);
+    }
   }
 
   public function renderBackground(

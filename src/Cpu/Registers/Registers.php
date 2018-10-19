@@ -10,7 +10,7 @@ final class Registers {
   public ?Status $p;
   public int $sp = 0;
   public int $pc = 0;
-
+  
   public static function getDefault(): Registers {
     $instance = new self();
     $instance->a = 0x00;
