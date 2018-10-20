@@ -2,7 +2,9 @@
 
 namespace Hes;
 
-use namespace HH\Lib\C;
+
+use namespace Hes\Ppu;
+use namespace Hes\Exception;
 
 use type Hes\Bus\CpuBus;
 use type Hes\Bus\PpuBus;
@@ -14,9 +16,6 @@ use type Hes\Cpu\OpCode;
 use type Hes\Cpu\Interrupts;
 use type Hes\Bus\Keypad;
 use type Hes\NesFile\NesFile;
-use type Hes\Ppu\Ppu;
-use type Hes\Ppu\Renderer;
-use namespace Hes\Exception;
 
 use function is_file;
 use function file_get_contents;
@@ -24,26 +23,21 @@ use function file_get_contents;
 class Nes {
 
   public ?Cpu $cpu;
-  public ?Ppu $ppu;
+  public ?Ppu\Ppu $ppu;
   public ?CpuBus $cpuBus;
   public ?Rom $programRom;
   public ?PpuBus $ppuBus;
   public ?Dma $dma;
-
-  public Ram $ram;
-  public Keypad $keypad;
-  public Interrupts $interrupts;
-  public Renderer $renderer;
-  public Ram $characterMem;
+  public ?Ram $ram;
+  public ?Keypad $keypad;
+  public ?Interrupts $interrupts;
+  public ?Ppu\Renderer $renderer;
+  public ?Ram $characterMem;
 
   public function __construct(
-    protected string $canvas
+    protected Ppu\Canvas $canvas
   ) {
-    $this->renderer = new Renderer();
-    $this->keypad = new Keypad();
-    $this->ram = new Ram(2048);
-    $this->characterMem = new Ram(0x4000);
-    $this->interrupts = new Interrupts();
+    $this->renderer = new Ppu\Renderer();
   }
 
   //
@@ -68,46 +62,48 @@ class Nes {
       throw new Exception\RomNotFoundException('Nes ROM file not found.');
     }
     $nesRom = NesFile::parse(file_get_contents($nesRomFilename));
-    for ($i = 0; $i < C\count($nesRom->characterRom); $i++) {
+    $this->keypad = new Keypad();
+    $this->ram = new Ram(2048);
+    $this->characterMem = new Ram(0x4000);
+    // UNSAFE
+    for ($i = 0; $i < $nesRom->characterRom->count(); $i++) {
       $this->characterMem->write($i, $nesRom->characterRom[$i]);
     }
-    $programRom = new Rom($nesRom->programRom);
-    $ppuBus = new PpuBus($this->characterMem);
-    $this->ppu = new Ppu($ppuBus, $this->interrupts, $nesRom->isHorizontalMirror);
+    $this->programRom = new Rom($nesRom->programRom);
+    $this->ppuBus = new PpuBus($this->characterMem);
+    $this->interrupts = new Interrupts();
+    $this->ppu = new Ppu\Ppu($this->ppuBus, $this->interrupts, $nesRom->isHorizontalMirror);
     $this->dma = new Dma($this->ram, $this->ppu);
-    $ppu = $this->ppu;
-    $dma = $this->dma;
-    if($ppu is Ppu && $dma is Dma) {
-      $this->cpu = new Cpu(
-        new CpuBus(
-          $this->ram,
-          $programRom,
-          $ppu,
-          $this->keypad,
-          $dma
-        ),
-        $this->interrupts,
-        new OpCode()
-      );
-      $this->cpu->reset();
-    }
+    $this->cpu = new Cpu(
+      new CpuBus(
+        $this->ram,
+        $this->programRom,
+        $this->ppu,
+        $this->keypad,
+        $this->dma
+      ),
+      $this->interrupts,
+      new OpCode()
+    );
+    $this->cpu->reset();
   }
 
-  private function frame(): void {
-    while (true) {
-      $cycle = 0;
-      $dma = $this->dma;
-      $cpu = $this->cpu;
-      $ppu = $this->ppu;
-      if ($dma is Dma && $cpu is Cpu && $ppu is Ppu) {
+  private function frame(): mixed {
+    $dma = $this->dma;
+    $cpu = $this->cpu;
+    $ppu = $this->ppu;
+    if ($dma is Dma && $cpu is Cpu && $ppu is Ppu\Ppu) {
+      while (true) {
+        $cycle = 0;
         if ($dma->isDmaProcessing()) {
           $dma->runDma();
           $cycle = 514;
         }
         $cycle += $cpu->run();
         $renderingData = $ppu->run($cycle * 3);
-        if ($renderingData) {
+        if ($renderingData is Ppu\RenderingData) {
           $cpu->bus->keypad->fetch();
+          // UNSAFE
           $this->renderer->render($renderingData, $this->canvas);
           break;
         }
@@ -119,8 +115,5 @@ class Nes {
     do {
       $this->frame();
     } while (true);
-  }
-
-  public function close(): void {
   }
 }

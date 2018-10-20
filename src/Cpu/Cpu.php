@@ -15,11 +15,8 @@ use function sprintf;
 
 final class Cpu {
 
-    /** @var \Nes\Cpu\Registers\Registers */
   public Registers $registers;
-    /** @var bool */
-  public bool $hasBranched;
-    /** @var \Nes\Cpu\OpCodeProps[] */
+  public bool $hasBranched = false;
   public dict<int, OpCodeProps> $opCodeList = dict[];
 
   const float CPU_CLOCK = 1789772.5;
@@ -30,7 +27,6 @@ final class Cpu {
     OpCode $opcode
   ) {
     $this->registers = Registers::getDefault();
-    $this->hasBranched = false;
     $opCodes = $opcode->getOpCodes();
     foreach ($opCodes as $key => $op) {
       $this->opCodeList[hexdec($key)] = $op;
@@ -64,44 +60,44 @@ final class Cpu {
       case Addressing::ZeroPage:
         return new AddrOrDataAndAdditionalCycle($this->fetch($this->registers->pc), 0);
       case Addressing::ZeroPageX:
-          $addr = $this->fetch($this->registers->pc);
-          return new AddrOrDataAndAdditionalCycle(
-            ($addr + $this->registers->x) & 0xff,
-            0
-          );
-        case Addressing::ZeroPageY:
-          $addr = $this->fetch($this->registers->pc);
-          return new AddrOrDataAndAdditionalCycle(($addr + $this->registers->y & 0xff), 0);
-        case Addressing::Absolute:
-          return new AddrOrDataAndAdditionalCycle(($this->fetch($this->registers->pc, "Word")), 0);
-        case Addressing::AbsoluteX:
-          $addr = ($this->fetch($this->registers->pc, "Word"));
-          $additionalCycle = ($addr & 0xFF00) !== (($addr + $this->registers->x) & 0xFF00) ? 1 : 0;
+        $addr = $this->fetch($this->registers->pc);
+        return new AddrOrDataAndAdditionalCycle(
+          ($addr + $this->registers->x) & 0xff,
+          0
+        );
+      case Addressing::ZeroPageY:
+        $addr = $this->fetch($this->registers->pc);
+        return new AddrOrDataAndAdditionalCycle(($addr + $this->registers->y & 0xff), 0);
+      case Addressing::Absolute:
+        return new AddrOrDataAndAdditionalCycle(($this->fetch($this->registers->pc, "Word")), 0);
+      case Addressing::AbsoluteX:
+        $addr = ($this->fetch($this->registers->pc, "Word"));
+        $additionalCycle = ($addr & 0xFF00) !== (($addr + $this->registers->x) & 0xFF00) ? 1 : 0;
         return new AddrOrDataAndAdditionalCycle(($addr + $this->registers->x) & 0xFFFF, $additionalCycle);
-        case Addressing::AbsoluteY:
-          $addr = ($this->fetch($this->registers->pc, "Word"));
-          $additionalCycle = ($addr & 0xFF00) !== (($addr + $this->registers->y) & 0xFF00) ? 1 : 0;
-          return new AddrOrDataAndAdditionalCycle(($addr + $this->registers->y) & 0xFFFF, $additionalCycle);
-        case Addressing::PreIndexedIndirect:
-          $baseAddr = ($this->fetch($this->registers->pc) + $this->registers->x) & 0xFF;
-          $addr = $this->read($baseAddr) + ($this->read(($baseAddr + 1) & 0xFF) << 8);
-          return new AddrOrDataAndAdditionalCycle(
-            $addr & 0xFFFF,
-            ($addr & 0xFF00) !== ($baseAddr & 0xFF00) ? 1 : 0
-          );
-        case Addressing::PostIndexedIndirect:
-          $addrOrData = $this->fetch($this->registers->pc);
-          $baseAddr = $this->read($addrOrData) + ($this->read(($addrOrData + 1) & 0xFF) << 8);
-          $addr = $baseAddr + $this->registers->y;
-          return new AddrOrDataAndAdditionalCycle(
-            $addr & 0xFFFF,
-            ($addr & 0xFF00) !== ($baseAddr & 0xFF00) ? 1 : 0
-          );
-        case Addressing::IndirectAbsolute:
-          $addrOrData = $this->fetch($this->registers->pc, "Word");
-          $addr = $this->read($addrOrData)
-            + ($this->read(($addrOrData & 0xFF00) | ((($addrOrData & 0xFF) + 1) & 0xFF)) << 8);
-          return new AddrOrDataAndAdditionalCycle($addr & 0xFFFF, 0);
+      case Addressing::AbsoluteY:
+        $addr = ($this->fetch($this->registers->pc, "Word"));
+        $additionalCycle = ($addr & 0xFF00) !== (($addr + $this->registers->y) & 0xFF00) ? 1 : 0;
+        return new AddrOrDataAndAdditionalCycle(($addr + $this->registers->y) & 0xFFFF, $additionalCycle);
+      case Addressing::PreIndexedIndirect:
+        $baseAddr = ($this->fetch($this->registers->pc) + $this->registers->x) & 0xFF;
+        $addr = $this->read($baseAddr) + ($this->read(($baseAddr + 1) & 0xFF) << 8);
+        return new AddrOrDataAndAdditionalCycle(
+          $addr & 0xFFFF,
+          ($addr & 0xFF00) !== ($baseAddr & 0xFF00) ? 1 : 0
+        );
+      case Addressing::PostIndexedIndirect:
+        $addrOrData = $this->fetch($this->registers->pc);
+        $baseAddr = $this->read($addrOrData) + ($this->read(($addrOrData + 1) & 0xFF) << 8);
+        $addr = $baseAddr + $this->registers->y;
+        return new AddrOrDataAndAdditionalCycle(
+          $addr & 0xFFFF,
+          ($addr & 0xFF00) !== ($baseAddr & 0xFF00) ? 1 : 0
+        );
+      case Addressing::IndirectAbsolute:
+        $addrOrData = $this->fetch($this->registers->pc, "Word");
+        $addr = $this->read($addrOrData)
+          + ($this->read(($addrOrData & 0xFF00) | ((($addrOrData & 0xFF) + 1) & 0xFF)) << 8);
+        return new AddrOrDataAndAdditionalCycle($addr & 0xFFFF, 0);
       default:
         echo($mode);
         throw new UnknownAddressException("Unknown addressing ".$mode." detected.");
@@ -116,12 +112,11 @@ final class Cpu {
   public function read(int $addr, ?string $size = null): int {
     $addr &= 0xFFFF;
     if($size is string) {
-      // UNSAFE
       return $size === "Word"
-        ? ($this->bus->readByCpu($addr) | $this->bus->readByCpu($addr + 1) << 8)
-        : $this->bus->readByCpu($addr);
+        ? (intval($this->bus->readByCpu($addr)) | intval($this->bus->readByCpu($addr + 1)) << 8)
+        : intval($this->bus->readByCpu($addr));
     }
-    return 0;
+    return intval($this->bus->readByCpu($addr));
   }
 
   public function write(int $addr, int $data): void {

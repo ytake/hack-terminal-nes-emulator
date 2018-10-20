@@ -6,7 +6,7 @@ final class NesRom {
 
   public function __construct(
     public bool $isHorizontalMirror,
-    public vec<int> $programRom,
-    public vec<int> $characterRom
+    public Vector<int> $programRom,
+    public Vector<int> $characterRom
   ) {}
 }

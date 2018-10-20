@@ -2,10 +2,9 @@
 
 namespace Hes\NesFile;
 
-use namespace HH\Lib\{Vec, C, Str};
+use namespace HH\Lib\{C, Str};
 use type Hes\Exception\NesFormatException;
 
-use function substr;
 use function ord;
 use function printf;
 use function dechex;
@@ -18,10 +17,11 @@ class NesFile {
 
   public static function parse(string $nesBuffer): NesRom {
     self::invariantNes($nesBuffer);
-    $nes = vec[];
+    $nes = Map{};
     for ($i = 0; $i < Str\length($nesBuffer); ++$i) {
-      $nes[$i] = (ord($nesBuffer[$i]) & 0xFF);
+      $nes->add(Pair{$i, (ord($nesBuffer[$i]) & 0xFF)});
     }
+
     printf("Rom size: %d (0x%s)\n", C\count($nes), dechex(C\count($nes)));
     $programRomPages = $nes[4];
     printf("Program ROM pages: %d\n", $programRomPages);
@@ -34,11 +34,10 @@ class NesFile {
     $characterRomEnd = $characterRomStart + $characterRomPages * self::CHARACTER_ROM_SIZE;
     printf("Character ROM start: 0x%s (%d)\n", dechex($characterRomStart), $characterRomStart);
     printf("Character ROM end: 0x%s (%d)\n", dechex($characterRomEnd), $characterRomEnd);
-
     $nesRom = new NesRom(
       $isHorizontalMirror,
-      Vec\slice($nes, self::NES_HEADER_SIZE, ($characterRomStart - 1) - self::NES_HEADER_SIZE),
-      Vec\slice($nes, $characterRomStart, ($characterRomEnd - 1) - $characterRomStart)
+      $nes->slice(self::NES_HEADER_SIZE, ($characterRomStart - 1) - self::NES_HEADER_SIZE)->concat(Map{}),
+      $nes->slice($characterRomStart, ($characterRomEnd - 1) - $characterRomStart)->concat(Map{})
     );
     printf(
       "Program   ROM: 0x0000 - 0x%s (%d bytes)\n",
@@ -53,9 +52,8 @@ class NesFile {
     return $nesRom;
   }
 
-  <<__Rx>>
   private static function invariantNes(string $buff): void {
-    if (substr($buff, 0, 3) !== 'NES') {
+    if (Str\slice($buff, 0, 3) !== 'NES') {
       throw new NesFormatException('This file is not NES format.');
     }
   }

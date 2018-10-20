@@ -6,6 +6,6 @@ namespace Hes\Ppu\Canvas;
 interface CanvasInterface {
 
   public function draw(
-    vec<int> $frameBuffer
+    Map<int, int> $frameBuffer
   ): void;
 }

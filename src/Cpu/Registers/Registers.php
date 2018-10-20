@@ -4,12 +4,12 @@ namespace Hes\Cpu\Registers;
 
 final class Registers {
 
-  public int $a = 0;
-  public int $x = 0;
-  public int $y = 0;
+  public int $a = 0x00;
+  public int $x = 0x00;
+  public int $y = 0x00;
   public ?Status $p;
-  public int $sp = 0;
-  public int $pc = 0;
+  public int $sp = 0x01fd;
+  public int $pc = 0x0000;
 
   public static function getDefault(): Registers {
     $instance = new self();

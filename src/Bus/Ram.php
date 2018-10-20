@@ -2,12 +2,13 @@
 
 namespace Hes\Bus;
 
+use namespace HH\Lib\C;
+
 use function array_fill;
-use function count;
 
 class Ram {
 
-  public vec<int> $ram = vec[];
+  private vec<int> $ram = vec[];
 
   public function __construct(
     int $size
@@ -16,7 +17,7 @@ class Ram {
   }
 
   public function reset(): void {
-    $this->ram = vec(array_fill(0, count($this->ram) - 1, 0));
+    $this->ram = vec(array_fill(0, C\count($this->ram) - 1, 0));
   }
 
   <<__Rx>>
@@ -26,5 +27,10 @@ class Ram {
 
   public function write(int $addr, int $val): void {
     $this->ram[$addr] = $val;
+  }
+
+  <<__Rx>>
+  public function every(): vec<int> {
+    return $this->ram;
   }
 }

@@ -20,7 +20,7 @@ class PngCanvas extends AbstractDisposeCanvas {
 
   <<__Override>>
   public function draw(
-    vec<int> $frameBuffer
+    Map<int, int> $frameBuffer
   ): void {
     $image = $this->imageColor();
     for ($y = 0; $y < 224; $y++) {

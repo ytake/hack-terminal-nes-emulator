@@ -1,11 +1,10 @@
 #!/usr/bin/env hhvm
 <?hh // strict
-
 require_once(__DIR__.'/vendor/hh_autoload.php');
 
-use type Ytake\Nes\Application;
+use type Hes\Application;
 
 <<__Entrypoint>>
-function run(): void {
+function main(): void {
   Application::main();
 }

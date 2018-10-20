@@ -1,5 +1,7 @@
 <?hh // strict
 
+namespace HesTest\Ppu;
+
 use type Hes\Ppu\Palette;
 use type Facebook\HackTest\HackTest;
 use function Facebook\FBExpect\expect;

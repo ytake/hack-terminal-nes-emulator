@@ -35,7 +35,7 @@ class NullCanvas extends AbstractDisposeCanvas {
 
   <<__Override>>
   public function draw(
-    vec<int> $_frameBuffer
+    Map<int, int> $_frameBuffer
   ): void {
     $microTime = microtime(true);
     $second = floor($microTime);

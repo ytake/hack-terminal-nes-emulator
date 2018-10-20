@@ -3,15 +3,15 @@
 namespace Hes\Ppu;
 
 use namespace HH\Lib\C;
+use namespace Hes\Ppu;
 
 use function array_fill;
 use function intval;
-use function array_key_exists;
 
 class Renderer {
 
-  public vec<int> $frameBuffer = vec[];
-  public vec<Tile> $background = vec[];
+  public Map<int, int> $frameBuffer = Map{};
+  public Vector<Tile> $background = Vector{};
   public int $serial = 0;
 
   private ImmVector<ImmVector<int>> $immColor = ImmVector{
@@ -81,17 +81,18 @@ class Renderer {
     ImmVector{0x11, 0x11, 0x11},
   };
 
-  private dict<string, classname<Canvas\AbstractDisposeCanvas>> $v = dict[
-    'terminal' => Canvas\TerminalCanvas::class,
-    'null' =>  Canvas\NullCanvas::class,
-    'png' => Canvas\PngCanvas::class,
+  private dict<Canvas, classname<Canvas\AbstractDisposeCanvas>> $dic = dict[
+    Canvas::TERMINAL => Canvas\TerminalCanvas::class,
+    Canvas::NULL =>  Canvas\NullCanvas::class,
+    Canvas::PNG => Canvas\PngCanvas::class,
   ];
 
   public function __construct(
   ) {
-    $this->frameBuffer = vec(array_fill(0, 256 * 256 * 4, 0)); // 256 x 240
+    $this->frameBuffer = new Map(array_fill(0, 256 * 256 * 4, 0)); // 256 x 240
   }
 
+  <<__Rx>>
   public function shouldPixelHide(int $x, int $y): bool {
     $tileX = ~~intval($x / 8);
     $tileY = ~~intval($y / 8);
@@ -111,26 +112,22 @@ class Renderer {
 
   public function render(
     RenderingData $data,
-    string $canvas
+    Ppu\Canvas $canvas
   ): void {
-    if ($data->background is vec<_>) {
+    if ($data->background is Vector<_>) {
       $this->renderBackground($data->background, $data->palette);
     }
     if ($data->sprites is dict<_, _>) {
       $this->renderSprites($data->sprites, $data->palette);
     }
-
-    $cn = Canvas\TerminalCanvas::class;
-    if(array_key_exists($canvas, $this->v)) {
-      $cn = $this->v[$canvas];
-    }
+    $cn = $this->dic[$canvas];
     using ($cv = new $cn()) {
       $cv->draw($this->frameBuffer);
     }
   }
 
   public function renderBackground(
-    vec<Tile> $background,
+    Vector<Tile> $background,
     dict<int, mixed> $palette
   ): void {
     $this->background = $background;
@@ -164,16 +161,18 @@ class Renderer {
       for ($j = 0; $j < 8; $j = ($j + 1) | 0) {
         $paletteIndex = $tile->paletteId * 4 + $tile->pattern[$i][$j];
         $colorId = $palette[$paletteIndex];
-        $color = $this->immColor->get(intval($palette[$paletteIndex]));
+        $color = $this->immColor->get(intval($colorId));
         if ($color is ImmVector<_>) {
           $x = $tileX + $j - $offsetX;
           $y = $tileY + $i - $offsetY;
           if ($x >= 0 && 0xFF >= $x && $y >= 0 && $y < 224) {
             $index = ($x + ($y * 0x100)) * 4;
-            $this->frameBuffer[$index] = $color[0];
-            $this->frameBuffer[$index + 1] = $color[1];
-            $this->frameBuffer[$index + 2] = $color[2];
-            $this->frameBuffer[$index + 3] = 0xFF;
+            $this->frameBuffer->addAll([
+              Pair{$index, $color[0]},
+              Pair{$index + 1, $color[1]},
+              Pair{$index + 2, $color[2]},
+              Pair{$index + 3, 0xFF}
+            ]);
           }
         }
       }
@@ -199,9 +198,11 @@ class Renderer {
           $color = $this->immColor->get(intval($palette[$paletteId * 4 + $sprite->sprite[$i][$j] + 0x10]));
           if($color is ImmVector<_>) {
             $index = ($x + $y * 0x100) * 4;
-            $this->frameBuffer[$index] = $color[0];
-            $this->frameBuffer[$index + 1] = $color[1];
-            $this->frameBuffer[$index + 2] = $color[2];
+            $this->frameBuffer->addAll([
+              Pair{$index, $color[0]},
+              Pair{$index + 1, $color[1]},
+              Pair{$index + 2, $color[2]},
+            ]);
           }
         }
       }

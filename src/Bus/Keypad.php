@@ -13,13 +13,9 @@ class Keypad {
 
   public mixed $file;
   public string $keyPressing = '';
-
-  public vec<bool> $keyBuffer = vec[];
-
+  public vec<bool> $keyBuffer;
   public vec<bool> $keyRegistors = vec[];
-
   public bool $isSet = false;
-
   public int $index = 0;
 
   public function __construct() {
@@ -31,7 +27,7 @@ class Keypad {
 
   public function fetch(): void {
     $key = fread($this->file, 1);
-    if ($key !== false || $key === '') {
+    if ($key === '') {
       $this->keyDown($key);
     } elseif ($this->keyPressing !== '') {
       $this->keyUp($this->keyPressing);
@@ -52,8 +48,7 @@ class Keypad {
       $this->keyBuffer[$keyIndex] = false;
     }
   }
-  
-  <<__Rx>>
+
   public function matchKey(string $key): int {
     //Maps a keyboard key to a nes key.
     // A, B, SELECT, START, ↑, ↓, ←, →
