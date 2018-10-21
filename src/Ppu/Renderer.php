@@ -82,7 +82,7 @@ class Renderer {
   };
 
   private dict<Canvas, classname<Canvas\AbstractDisposeCanvas>> $dic = dict[
-    Canvas::TERMINAL => Canvas\TerminalCanvas::class,
+    // Canvas::TERMINAL => Canvas\TerminalCanvas::class,
     Canvas::NULL =>  Canvas\NullCanvas::class,
     Canvas::PNG => Canvas\PngCanvas::class,
   ];

@@ -3,7 +3,7 @@
 namespace Hes\Ppu;
 
 enum Canvas: string as string {
-  TERMINAL = 'terminal';
+  // TERMINAL = 'terminal';
   NULL = 'null';
   PNG = 'png';
 }
