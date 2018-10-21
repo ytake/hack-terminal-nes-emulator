@@ -1,6 +1,8 @@
 # An NES emulator written in HHVM/Hack
 
-[hasegawa-tomoki/php-terminal-nes-emulator](https://github.com/hasegawa-tomoki/php-terminal-nes-emulator) converted for hack
+Based on [bokuweb/flownes](https://github.com/bokuweb/flownes), [gabrielrcouto/php-terminal-gameboy-emulator](https://github.com/gabrielrcouto/php-terminal-gameboy-emulator).
+
+[hasegawa-tomoki/php-terminal-nes-emulator](https://github.com/hasegawa-tomoki/php-terminal-nes-emulator) For HHVM/Hack
 
 ## Require
 
@@ -31,3 +33,9 @@ $ hhvm ./boot testing.nes -c png
 ### Terminal
 
 WIP
+
+## Credit
+
+- [bokuweb/flownes](https://github.com/bokuweb/flownes)
+- [php-terminal-gameboy-emulator](https://github.com/gabrielrcouto/php-terminal-gameboy-emulator)  
+- [hasegawa-tomoki/php-terminal-nes-emulator](https://github.com/hasegawa-tomoki/php-terminal-nes-emulator)
