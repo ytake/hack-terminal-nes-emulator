@@ -2,7 +2,6 @@
 
 namespace Hes;
 
-
 use namespace Hes\Ppu;
 use namespace Hes\Exception;
 
@@ -68,7 +67,6 @@ class Nes {
       throw new Exception\RomNotFoundException('Nes ROM file not found.');
     }
     $nesRom = NesFile::parse(file_get_contents($nesRomFilename));
-
     for ($i = 0; $i < $nesRom->characterRom->count(); $i++) {
       $this->characterMem->write($i, $nesRom->characterRom[$i]);
     }
@@ -106,7 +104,6 @@ class Nes {
         $renderingData = $ppu->run($cycle * 3);
         if ($renderingData is Ppu\RenderingData) {
           $cpu->bus->keypad->fetch();
-          // UNSAFE
           $this->renderer->render($renderingData, $this->canvas);
           break;
         }

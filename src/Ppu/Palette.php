@@ -11,23 +11,17 @@ class Palette {
   public function __construct() {
     $this->paletteRam = new Ram(0x20);
   }
-<<__Rx>>
+
+  <<__Rx>>
   public function isSpriteMirror(int $addr): bool {
-    if($addr === 0x10) {
-      return true;
-    }
-    if($addr === 0x14) {
-      return true;
-    }
-    if ($addr === 0x18) {
-      return true;
-    }
-    if ($addr === 0x1c) {
-      return true;
-    }
-    return false;
+    return ($addr === 0x10)
+    |> ($$ === true) ? true : ($addr === 0x14)
+    |> ($$ === true) ? true : ($addr === 0x18)
+    |> ($$ === true) ? true : ($addr === 0x1c)
+    |> ($$ === true) ? true : false;
   }
-<<__Rx>>
+
+  <<__Rx>>
   public function isBackgroundMirror(int $addr): bool {
     return ($addr === 0x04)
     |> ($$ === true) ? true : ($addr === 0x08)
@@ -35,7 +29,7 @@ class Palette {
     |> ($$ === true) ? true : false;
   }
 
-<<__Rx>>
+  <<__Rx>>
   public function read(): dict<int, int> {
     $return = dict[];
     foreach ($this->paletteRam->every() as $i => $value) {
@@ -48,7 +42,8 @@ class Palette {
     }
     return $return;
   }
-<<__Rx>>
+
+  <<__Rx>>
   public function getPaletteAddr(int $addr): int {
     $mirrorDowned = (($addr & 0xFF) % 0x20);
     //NOTE: 0x3f10, 0x3f14, 0x3f18, 0x3f1c is mirror of 0x3f00, 0x3f04, 0x3f08, 0x3f0c

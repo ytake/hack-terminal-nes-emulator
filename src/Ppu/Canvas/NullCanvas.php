@@ -14,17 +14,18 @@ use function fprintf;
 
 class NullCanvas extends AbstractDisposeCanvas {
 
-  private resource $fp;
+  private ?resource $fp;
   private int $frame = 0;
   private float $last = -1.0;
   private int $initial;
+  private string $dir = '';
 
   public function __construct() {
     $dir = 'tmp';
     if (! is_dir(($dir))) {
       mkdir($dir);
     }
-    $this->fp = fopen($dir.'/nes.log', 'w');
+    $this->dir = $dir;
     $this->initial = time();
   }
 
@@ -33,10 +34,16 @@ class NullCanvas extends AbstractDisposeCanvas {
     fclose($this->fp);
   }
 
+  <<__Memoize>>
+  private function fileOpen(): resource {
+    return fopen($this->dir.'/nes.log', 'w');
+  }
+
   <<__Override>>
   public function draw(
     Map<int, int> $_frameBuffer
   ): void {
+    $this->fp = $this->fileOpen();
     $microTime = microtime(true);
     $second = floor($microTime);
     if ($second !== $this->last) {

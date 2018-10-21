@@ -10,7 +10,7 @@ use const PHP_EOL;
 
 final class Application extends CLIWithRequiredArguments {
 
-  private Ppu\Canvas $canvas = Ppu\Canvas::TERMINAL;
+  private Ppu\Canvas $canvas = Ppu\Canvas::PNG;
 
   <<__Override>>
   public static function getHelpTextForRequiredArguments(): vec<string> {
@@ -25,7 +25,7 @@ final class Application extends CLIWithRequiredArguments {
     try {
       $nes->load($filename);
     } catch (\Exception $e) {
-      throw $e;
+      echo $e->getMessage();
     }
     $nes->start();
     return 0;

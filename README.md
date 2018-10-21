@@ -8,8 +8,26 @@ HHVM >= 3.28 (*Not Supoorted PHP*)
 
 ## Install
 
-For Composer
+### Composer
 
 ```bash
 $ hhvm $(which composer) install
 ```
+
+## Usage
+
+### Measuring FPS
+
+```bash
+$ hhvm ./boot testing.nes -c null
+```
+
+### ScreenShot
+
+```bash
+$ hhvm ./boot testing.nes -c png
+```
+
+### Terminal
+
+WIP

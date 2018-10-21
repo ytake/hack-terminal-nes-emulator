@@ -23,8 +23,8 @@ class PngCanvas extends AbstractDisposeCanvas {
     Map<int, int> $frameBuffer
   ): void {
     $image = $this->imageColor();
-    for ($y = 0; $y < 224; $y++) {
-      for ($x = 0; $x < 256; $x++) {
+    for ($y = 0; $y < CanvasInterface::screenHeight; $y++) {
+      for ($x = 0; $x < CanvasInterface::screenWidth; $x++) {
         $index = ($x + ($y * 0x100)) * 4;
         $color = imagecolorallocate(
           $image,
@@ -39,10 +39,5 @@ class PngCanvas extends AbstractDisposeCanvas {
       mkdir('screen');
     }
     imagepng($image, sprintf("screen/%08d.png", $this->serial++));
-  }
-
-  <<__Override>>
-  public function __dispose(): void {
-
   }
 }

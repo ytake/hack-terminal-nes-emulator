@@ -117,10 +117,13 @@ class Renderer {
     if ($data->sprites is dict<_, _>) {
       $this->renderSprites($data->sprites, $data->palette);
     }
+    $this->resolveCanvas($canvas)->draw($this->frameBuffer);
+  }
+
+  <<__Memoize>>
+  private function resolveCanvas(Canvas $canvas): Canvas\AbstractDisposeCanvas {
     $cn = $this->dic[$canvas];
-    using ($cv = new $cn()) {
-      $cv->draw($this->frameBuffer);
-    }
+    return new $cn();
   }
 
   public function renderBackground(

@@ -22,16 +22,6 @@ final class TerminalCanvas extends AbstractDisposeCanvas {
   protected int $height = 0;
   protected string $lastFrame = '';
   protected Map<int, int> $lastFrameCanvasBuffer = Map{};
-    /**
-     * Braille Pixel Matrix
-     *   ,___,
-     *   |1 4|
-     *   |2 5|
-     *   |3 6|
-     *   |7 8|
-     *   `````
-     * @var array
-     */
   protected ImmMap<int, ImmVector<string>> $pixelMap;
   protected int $width = 0;
   public int $threshold = 127;
@@ -53,8 +43,8 @@ final class TerminalCanvas extends AbstractDisposeCanvas {
     } else {
       ++$this->framesInSecond;
     }
-    $screenWidth = 256;
-    $screenHeight = 224;
+    $screenWidth = CanvasInterface::screenWidth;
+    $screenHeight = CanvasInterface::screenHeight;
     $charWidth = intval($screenWidth / 2);
     $charHeight = intval($screenHeight / 4);
 
@@ -102,11 +92,6 @@ final class TerminalCanvas extends AbstractDisposeCanvas {
       $this->height = $charHeight + 1;
       $this->width = $charWidth;
     }
-  }
-
-  <<__Override>>
-  public function __dispose(): void {
-
   }
 
   private function fill(int $w, int $h): Map<int, string> {
