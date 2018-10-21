@@ -26,18 +26,24 @@ class Nes {
   public ?Ppu\Ppu $ppu;
   public ?CpuBus $cpuBus;
   public ?Rom $programRom;
-  public ?PpuBus $ppuBus;
   public ?Dma $dma;
-  public ?Ram $ram;
-  public ?Keypad $keypad;
-  public ?Interrupts $interrupts;
-  public ?Ppu\Renderer $renderer;
-  public ?Ram $characterMem;
+
+  public Ram $ram;
+  public PpuBus $ppuBus;
+  public Keypad $keypad;
+  public Interrupts $interrupts;
+  public Ppu\Renderer $renderer;
+  public Ram $characterMem;
 
   public function __construct(
     protected Ppu\Canvas $canvas
   ) {
     $this->renderer = new Ppu\Renderer();
+    $this->keypad = new Keypad();
+    $this->ram = new Ram(2048);
+    $this->characterMem = new Ram(0x4000);
+    $this->ppuBus = new PpuBus($this->characterMem);
+    $this->interrupts = new Interrupts();
   }
 
   //
@@ -62,30 +68,27 @@ class Nes {
       throw new Exception\RomNotFoundException('Nes ROM file not found.');
     }
     $nesRom = NesFile::parse(file_get_contents($nesRomFilename));
-    $this->keypad = new Keypad();
-    $this->ram = new Ram(2048);
-    $this->characterMem = new Ram(0x4000);
-    // UNSAFE
+
     for ($i = 0; $i < $nesRom->characterRom->count(); $i++) {
       $this->characterMem->write($i, $nesRom->characterRom[$i]);
     }
-    $this->programRom = new Rom($nesRom->programRom);
-    $this->ppuBus = new PpuBus($this->characterMem);
-    $this->interrupts = new Interrupts();
+    $programRom = new Rom($nesRom->programRom);
     $this->ppu = new Ppu\Ppu($this->ppuBus, $this->interrupts, $nesRom->isHorizontalMirror);
     $this->dma = new Dma($this->ram, $this->ppu);
-    $this->cpu = new Cpu(
-      new CpuBus(
-        $this->ram,
-        $this->programRom,
-        $this->ppu,
-        $this->keypad,
-        $this->dma
-      ),
-      $this->interrupts,
-      new OpCode()
-    );
-    $this->cpu->reset();
+    if ($this->ppu is Ppu\Ppu) {
+      $this->cpu = new Cpu(
+        new CpuBus(
+          $this->ram,
+          $programRom,
+          $this->ppu,
+          $this->keypad,
+          $this->dma
+        ),
+        $this->interrupts,
+        new OpCode()
+      );
+      $this->cpu->reset();
+    }
   }
 
   private function frame(): mixed {

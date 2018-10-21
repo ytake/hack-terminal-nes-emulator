@@ -45,7 +45,7 @@ final class CpuBus {
   public function writeByCpu(
     int $addr,
     int $data
-  ): mixed {
+  ): void {
     if ($addr < 0x0800) {
       // RAM
       $this->ram->write($addr, $data);
@@ -63,7 +63,7 @@ final class CpuBus {
         $this->keypad->write($data);
       } else {
         // APU
-        return false;
+        return;
       }
     }
   }

@@ -46,7 +46,6 @@ final class TerminalCanvas extends AbstractDisposeCanvas {
   public function draw(
     Map<int, int> $canvasBuffer
   ): void {
-    //Calculate current FPS
     if ($this->currentSecond !== time()) {
       $this->fps = $this->framesInSecond;
       $this->currentSecond = time();
@@ -60,29 +59,29 @@ final class TerminalCanvas extends AbstractDisposeCanvas {
     $charHeight = intval($screenHeight / 4);
 
     if ($canvasBuffer !== $this->lastFrameCanvasBuffer) {
-      $chars = array_fill(0, $screenWidth * $screenHeight, $this->brailleCharOffset);
+      $chars = $this->fill($screenWidth, $screenHeight);
       $frame = '';
       $fa = '';
       for ($y = 0; $y < $screenHeight; $y++) {
         for ($x = 0; $x < $screenWidth; $x++) {
           $pixelCanvasNumber = ($x + ($screenWidth * $y)) * 4;
-          $charPosition = floor($x / 2) + (floor($y / 4) * $charWidth);
-
+          $charPosition = intval(floor($x / 2) + (floor($y / 4) * $charWidth));
           $pixelAvg = (
             $canvasBuffer[$pixelCanvasNumber] +
             $canvasBuffer[$pixelCanvasNumber + 1] +
             $canvasBuffer[$pixelCanvasNumber + 2]
           ) / 3;
-
           if ($pixelAvg > $this->threshold) {
             $row = $this->pixelMap->get($y % 4);
             if ($row is ImmVector<_> && $row->containsKey($x % 2)) {
-              // UNSAFE
-              $chars[intval($charPosition)] |= \strval($row->get($x % 2));
+              if ($row->containsKey($x % 2)) {
+                /* HH_IGNORE_ERROR[4110] ignore */
+                $chars[$charPosition] |= $row->at($x % 2);
+              }
             }
           }
           if ($x % 2 === 1 && $y % 4 === 3) {
-            $frame .= $chars[intval($charPosition)];
+            $frame .= $chars[$charPosition];
             if ($x % ($screenWidth - 1) === 0) {
               $frame .= PHP_EOL;
             }
@@ -108,6 +107,10 @@ final class TerminalCanvas extends AbstractDisposeCanvas {
   <<__Override>>
   public function __dispose(): void {
 
+  }
+
+  private function fill(int $w, int $h): Map<int, string> {
+    return new Map(array_fill(0, $w * $h, $this->brailleCharOffset));
   }
 
   <<__Memoize>>

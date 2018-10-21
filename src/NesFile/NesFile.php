@@ -2,7 +2,7 @@
 
 namespace Hes\NesFile;
 
-use namespace HH\Lib\{C, Str};
+use namespace HH\Lib\Str;
 use type Hes\Exception\NesFormatException;
 
 use function ord;
@@ -22,7 +22,7 @@ class NesFile {
       $nes->add(Pair{$i, (ord($nesBuffer[$i]) & 0xFF)});
     }
 
-    printf("Rom size: %d (0x%s)\n", C\count($nes), dechex(C\count($nes)));
+    printf("Rom size: %d (0x%s)\n", $nes->count(), dechex($nes->count()));
     $programRomPages = $nes[4];
     printf("Program ROM pages: %d\n", $programRomPages);
     $characterRomPages = $nes[5];
@@ -41,13 +41,13 @@ class NesFile {
     );
     printf(
       "Program   ROM: 0x0000 - 0x%s (%d bytes)\n",
-      dechex(C\count($nesRom->programRom)),
-      C\count($nesRom->programRom)
+      dechex($nesRom->programRom->count()),
+      $nesRom->programRom->count()
     );
     printf(
       "Character ROM: 0x0000 - 0x%s (%d bytes)\n",
-      dechex(C\count($nesRom->characterRom)),
-      C\count($nesRom->characterRom)
+      dechex($nesRom->characterRom->count()),
+      $nesRom->characterRom->count()
     );
     return $nesRom;
   }

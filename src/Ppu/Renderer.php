@@ -97,17 +97,14 @@ class Renderer {
     $tileX = ~~intval($x / 8);
     $tileY = ~~intval($y / 8);
     $backgroundIndex = $tileY * 33 + $tileX;
-    $sprite = false;
+    $sprite = dict[];
     if(C\contains_key($this->background, $backgroundIndex)) {
       $sprite = $this->background[$backgroundIndex]->pattern;
     }
-    if (!$sprite) {
+    if (!C\count($sprite)) {
       return true;
     }
-    if($sprite is dict<_, _>) {
-      // UNSAFE
-      return !(intval($sprite[intval($y % 8)] && $sprite[intval($y % 8)][intval($x % 8)] % 4) === 0);
-    }
+    return !($sprite[$y % 8] && $sprite[$y % 8][$x % 8] % 4 === 0);
   }
 
   public function render(
@@ -131,10 +128,10 @@ class Renderer {
     dict<int, mixed> $palette
   ): void {
     $this->background = $background;
-    for ($i = 0; $i < C\count($background); $i += 1 | 0) {
+    for ($i = 0; $i < $background->count(); $i += 1 | 0) {
       $x = ($i % 33) * 8;
       $y = ~~intval($i / 33) * 8;
-      $this->renderTile($background[$i], $x, $y, $palette);
+      $this->renderTile($background->at($i), $x, $y, $palette);
     }
   }
 
@@ -195,8 +192,9 @@ class Renderer {
           continue;
         }
         if ($sprite->sprite[$i][$j]) {
-          $color = $this->immColor->get(intval($palette[$paletteId * 4 + $sprite->sprite[$i][$j] + 0x10]));
-          if($color is ImmVector<_>) {
+          $v = $palette[$paletteId * 4 + $sprite->sprite[$i][$j] + 0x10];
+          if($v is int) {
+            $color = $this->immColor->at($v);
             $index = ($x + $y * 0x100) * 4;
             $this->frameBuffer->addAll([
               Pair{$index, $color[0]},
