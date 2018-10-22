@@ -7,8 +7,8 @@ use type Hes\Ppu\Ppu;
 
 class Dma
 {
-  public bool $isProcessing = false;
-  public int $ramAddr = 0x0000;
+  private bool $isProcessing = false;
+  private int $ramAddr = 0x0000;
 
   public function __construct(
     public Ram $ram,

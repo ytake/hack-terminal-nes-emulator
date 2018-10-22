@@ -49,7 +49,6 @@ class Ppu {
     return $this->registers[0x00] & 0x03;
   }
 
-  <<__Rx>>
   public function getPalette(): dict<int, int> {
     return $this->palette->read();
   }
@@ -62,9 +61,10 @@ class Ppu {
     $this->registers[0x02] |= 0x40;
   }
 
+  <<__Rx>>
   public function hasSpriteHit(): bool {
-    $y = $this->spriteRam->read(0);
-    return ($y === $this->line) && $this->isBackgroundEnable() && $this->isSpriteEnable();
+    return $this->spriteRam->read(0)
+      |> ($$ === $this->line) && $this->isBackgroundEnable() && $this->isSpriteEnable();
   }
 
   <<__Rx>>
@@ -217,8 +217,12 @@ class Ppu {
     }
   }
 
+  private function offsetRegister(): int {
+    return ($this->registers[0] & 0x08) ? 0x1000 : 0x0000;
+  }
+
   public function buildSprites(): void {
-    $offset = ($this->registers[0] & 0x08) ? 0x1000 : 0x0000;
+    $offset = $this->offsetRegister();
     for ($i = 0; $i < self::SPRITES_NUMBER; $i = ($i + 4) | 0) {
       // INFO: Offset sprite Y position, because First and last 8line is not rendered.
       $y = $this->spriteRam->read($i) - 8;

@@ -21,11 +21,12 @@ final class Application extends CLIWithRequiredArguments {
   public async function mainAsync(): Awaitable<int> {
     $arg = $this->getArguments();
     $filename = $arg[0];
-    $nes = new Nes($this->canvas);
+    $nes = new Nes($this->canvas, $this->getStdout());
     try {
       $nes->load($filename);
     } catch (\Exception $e) {
       echo $e->getMessage();
+      return 1;
     }
     $nes->start();
     return 0;

@@ -2,6 +2,8 @@
 
 namespace Hes\Ppu\Canvas;
 
+use type Facebook\CLILib\OutputInterface;
+
 use function imagecreatetruecolor;
 use function imagecolorallocate;
 use function imagesetpixel;
@@ -19,18 +21,19 @@ class PngCanvas extends AbstractDisposeCanvas {
   }
 
   <<__Override>>
-  public function draw(
-    Map<int, int> $frameBuffer
-  ): void {
+  public async function drawAsync(
+    Map<int, int> $canvasBuffer,
+    OutputInterface $_output
+  ): Awaitable<void> {
     $image = $this->imageColor();
     for ($y = 0; $y < CanvasInterface::screenHeight; $y++) {
       for ($x = 0; $x < CanvasInterface::screenWidth; $x++) {
         $index = ($x + ($y * 0x100)) * 4;
         $color = imagecolorallocate(
           $image,
-          $frameBuffer[$index],
-          $frameBuffer[$index + 1],
-          $frameBuffer[$index + 2]
+          $canvasBuffer[$index],
+          $canvasBuffer[$index + 1],
+          $canvasBuffer[$index + 2]
         );
         imagesetpixel($image, $x, $y, $color);
       }

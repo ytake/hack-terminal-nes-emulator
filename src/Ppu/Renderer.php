@@ -4,6 +4,7 @@ namespace Hes\Ppu;
 
 use namespace HH\Lib\C;
 use namespace Hes\Ppu;
+use type Facebook\CLILib\OutputInterface;
 
 use function array_fill;
 use function intval;
@@ -82,7 +83,7 @@ class Renderer {
   };
 
   private dict<Canvas, classname<Canvas\AbstractDisposeCanvas>> $dic = dict[
-    // Canvas::TERMINAL => Canvas\TerminalCanvas::class,
+    Canvas::TERMINAL => Canvas\TerminalCanvas::class,
     Canvas::NULL =>  Canvas\NullCanvas::class,
     Canvas::PNG => Canvas\PngCanvas::class,
   ];
@@ -109,7 +110,8 @@ class Renderer {
 
   public function render(
     RenderingData $data,
-    Ppu\Canvas $canvas
+    Ppu\Canvas $canvas,
+    OutputInterface $output
   ): void {
     if ($data->background is Vector<_>) {
       $this->renderBackground($data->background, $data->palette);
@@ -117,7 +119,11 @@ class Renderer {
     if ($data->sprites is dict<_, _>) {
       $this->renderSprites($data->sprites, $data->palette);
     }
-    $this->resolveCanvas($canvas)->draw($this->frameBuffer);
+    $cv = $this->resolveCanvas($canvas);
+    \HH\Asio\join(
+      $cv->drawAsync($this->frameBuffer, $output)
+    );
+    $cv->close();
   }
 
   <<__Memoize>>

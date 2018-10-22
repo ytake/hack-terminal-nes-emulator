@@ -3,6 +3,7 @@
 namespace Hes\Ppu;
 
 use type Hes\Bus\Ram;
+use namespace HH\Lib\Dict;
 
 class Palette {
 
@@ -29,25 +30,23 @@ class Palette {
     |> ($$ === true) ? true : false;
   }
 
-  <<__Rx>>
   public function read(): dict<int, int> {
-    $return = dict[];
-    foreach ($this->paletteRam->every() as $i => $value) {
-      $return[$i] = $value;
-      if ($this->isSpriteMirror($i)) {
-        $return[$i] = $this->paletteRam->read($i - 0x10);
-      } elseif ($this->isBackgroundMirror($i)) {
-        $return[$i] = $this->paletteRam->read(0x00);
+    return Dict\map_with_key(
+      $this->paletteRam->every(), ($k, $v) ==> {
+      if($this->isSpriteMirror($k)) {
+        $v = $this->paletteRam->read($k - 0x10);
+      } elseif ($this->isBackgroundMirror($k)) {
+        $v = $this->paletteRam->read(0x00);
       }
-    }
-    return $return;
+      return $v;
+    });
   }
 
   <<__Rx>>
   public function getPaletteAddr(int $addr): int {
-    $mirrorDowned = (($addr & 0xFF) % 0x20);
     //NOTE: 0x3f10, 0x3f14, 0x3f18, 0x3f1c is mirror of 0x3f00, 0x3f04, 0x3f08, 0x3f0c
-    return $this->isSpriteMirror($mirrorDowned) ? $mirrorDowned - 0x10 : $mirrorDowned;
+    return (($addr & 0xFF) % 0x20)
+    |> $this->isSpriteMirror($$) ? $$ - 0x10 : $$;
   }
 
   public function write(int $addr, int $data): void {

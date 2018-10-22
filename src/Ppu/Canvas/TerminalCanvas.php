@@ -4,6 +4,8 @@ namespace Hes\Ppu\Canvas;
 
 use namespace HH\Lib\Str;
 
+use type Facebook\CLILib\OutputInterface;
+
 use function floor;
 use function time;
 use function html_entity_decode;
@@ -33,9 +35,10 @@ final class TerminalCanvas extends AbstractDisposeCanvas {
   }
 
   <<__Override>>
-  public function draw(
-    Map<int, int> $canvasBuffer
-  ): void {
+  public async function drawAsync(
+    Map<int, int> $canvasBuffer,
+    OutputInterface $output
+  ): Awaitable<void> {
     if ($this->currentSecond !== time()) {
       $this->fps = $this->framesInSecond;
       $this->currentSecond = time();
@@ -86,9 +89,7 @@ final class TerminalCanvas extends AbstractDisposeCanvas {
         $content = Str\format("\e[%dA\e[%dD", $this->height, $this->width);
       }
       $content = Str\format("FPS: %3d - Frame Skip: %3d\n", $this->fps, $this->framesInSecond) . $frame;
-
-      echo $content;
-
+      await $output->writeAsync($content);
       $this->height = $charHeight + 1;
       $this->width = $charWidth;
     }

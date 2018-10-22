@@ -2,6 +2,9 @@
 
 namespace Hes\Ppu\Canvas;
 
+use type Facebook\CLILib\OutputInterface;
+use namespace namespace HH\Lib\Str;
+
 use function is_dir;
 use function mkdir;
 use function fopen;
@@ -11,6 +14,7 @@ use function microtime;
 use function floor;
 use function printf;
 use function fprintf;
+use function intval;
 
 class NullCanvas extends AbstractDisposeCanvas {
 
@@ -30,24 +34,27 @@ class NullCanvas extends AbstractDisposeCanvas {
   }
 
   <<__Override>>
-  public function __dispose(): void {
+  public function close(): void {
     fclose($this->fp);
   }
 
-  <<__Memoize>>
   private function fileOpen(): resource {
     return fopen($this->dir.'/nes.log', 'w');
   }
 
   <<__Override>>
-  public function draw(
-    Map<int, int> $_frameBuffer
-  ): void {
+  public async function drawAsync(
+    Map<int, int> $_frameBuffer,
+    OutputInterface $output
+  ): Awaitable<void> {
     $this->fp = $this->fileOpen();
     $microTime = microtime(true);
     $second = floor($microTime);
+    $content = '';
     if ($second !== $this->last) {
-      printf("%6d %dfps\n", $second - $this->initial, $this->frame);
+      await $output->writeAsync(
+        Str\format("%6d %dfps\n", intval($second - $this->initial), $this->frame)
+      );
       $this->frame = 0;
     }
     fprintf($this->fp, "%-8.2f frame %d\n", $microTime, $this->frame++);

@@ -15,6 +15,7 @@ use type Hes\Cpu\OpCode;
 use type Hes\Cpu\Interrupts;
 use type Hes\Bus\Keypad;
 use type Hes\NesFile\NesFile;
+use type Facebook\CLILib\OutputInterface;
 
 use function is_file;
 use function file_get_contents;
@@ -33,9 +34,11 @@ class Nes {
   public Interrupts $interrupts;
   public Ppu\Renderer $renderer;
   public Ram $characterMem;
+  private NesFile $nf;
 
   public function __construct(
-    protected Ppu\Canvas $canvas
+    protected Ppu\Canvas $canvas,
+    protected OutputInterface $output
   ) {
     $this->renderer = new Ppu\Renderer();
     $this->keypad = new Keypad();
@@ -43,6 +46,7 @@ class Nes {
     $this->characterMem = new Ram(0x4000);
     $this->ppuBus = new PpuBus($this->characterMem);
     $this->interrupts = new Interrupts();
+    $this->nf = new NesFile();
   }
 
   //
@@ -66,10 +70,11 @@ class Nes {
     if (!is_file($nesRomFilename)) {
       throw new Exception\RomNotFoundException('Nes ROM file not found.');
     }
-    $nesRom = NesFile::parse(file_get_contents($nesRomFilename));
+    $nesRom = $this->nf->parse(file_get_contents($nesRomFilename));
     for ($i = 0; $i < $nesRom->characterRom->count(); $i++) {
       $this->characterMem->write($i, $nesRom->characterRom[$i]);
     }
+
     $programRom = new Rom($nesRom->programRom);
     $this->ppu = new Ppu\Ppu($this->ppuBus, $this->interrupts, $nesRom->isHorizontalMirror);
     $this->dma = new Dma($this->ram, $this->ppu);
@@ -104,7 +109,7 @@ class Nes {
         $renderingData = $ppu->run($cycle * 3);
         if ($renderingData is Ppu\RenderingData) {
           $cpu->bus->keypad->fetch();
-          $this->renderer->render($renderingData, $this->canvas);
+          $this->renderer->render($renderingData, $this->canvas, $this->output);
           break;
         }
       }

@@ -2,13 +2,16 @@
 
 namespace Hes\Ppu\Canvas;
 
+use type Facebook\CLILib\OutputInterface;
+
 <<__Sealed(AbstractDisposeCanvas::class)>>
 interface CanvasInterface {
 
   const int screenWidth =  256;
   const int screenHeight = 224;
 
-  public function draw(
-    Map<int, int> $frameBuffer
-  ): void;
+  public function drawAsync(
+    Map<int, int> $canvasBuffer,
+    OutputInterface $output
+  ): Awaitable<void>;
 }

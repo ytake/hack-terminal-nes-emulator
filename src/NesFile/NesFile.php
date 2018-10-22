@@ -15,13 +15,12 @@ class NesFile {
   const int PROGRAM_ROM_SIZE = 0x4000;
   const int CHARACTER_ROM_SIZE = 0x2000;
 
-  public static function parse(string $nesBuffer): NesRom {
-    self::invariantNes($nesBuffer);
+  public function parse(string $nesBuffer): NesRom {
     $nes = Map{};
-    for ($i = 0; $i < Str\length($nesBuffer); ++$i) {
-      $nes->add(Pair{$i, (ord($nesBuffer[$i]) & 0xFF)});
+    self::invariantNes($nesBuffer);
+    for ($i = 0; $i < Str\length($nesBuffer); $i++) {
+      $nes->add(Pair{$i, ord($nesBuffer[$i]) & 0xFF});
     }
-
     printf("Rom size: %d (0x%s)\n", $nes->count(), dechex($nes->count()));
     $programRomPages = $nes[4];
     printf("Program ROM pages: %d\n", $programRomPages);
