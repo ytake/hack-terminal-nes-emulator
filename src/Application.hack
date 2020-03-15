@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace Hes;
 
 use type Hes\Nes;

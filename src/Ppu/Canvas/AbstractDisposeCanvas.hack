@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace Hes\Ppu\Canvas;
 
 <<__ConsistentConstruct>>

@@ -1,12 +1,9 @@
-<?hh // strict
-
 namespace Hes\Cpu;
 
 use type Hes\Bus\Ram;
 use type Hes\Ppu\Ppu;
 
-class Dma
-{
+class Dma {
   private bool $isProcessing = false;
   private int $ramAddr = 0x0000;
 

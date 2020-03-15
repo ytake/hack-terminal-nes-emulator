@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace Hes\Bus;
 
 use type Hes\Cpu\Dma;

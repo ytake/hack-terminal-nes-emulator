@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace Hes\Cpu;
 
 final class OpCode {

@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace Hes\Bus;
 
 use function exec;
@@ -11,7 +9,7 @@ use function array_search;
 
 class Keypad {
 
-  public mixed $file;
+  public resource $file;
   public string $keyPressing = '';
   public vec<bool> $keyBuffer;
   public vec<bool> $keyRegistors = vec[];
@@ -19,7 +17,9 @@ class Keypad {
   public int $index = 0;
 
   public function __construct() {
-    exec('stty -icanon -echo');
+    $out = null;
+    $res = null;
+    exec('stty -icanon -echo', inout $out, inout $res);
     $this->file = fopen('php://stdin', 'r');
     stream_set_blocking($this->file, false);
     $this->keyBuffer = vec(array_fill(0, 8, false));
@@ -52,7 +52,7 @@ class Keypad {
   public function matchKey(string $key): int {
     //Maps a keyboard key to a nes key.
     // A, B, SELECT, START, ↑, ↓, ←, →
-    $keyIndex = array_search($key, ['.', ',', 'n', 'm', 'w', 's', 'a', 'd']);
+    $keyIndex = array_search($key, vec['.', ',', 'n', 'm', 'w', 's', 'a', 'd']);
     if ($keyIndex === false) {
       return -1;
     }
@@ -70,6 +70,7 @@ class Keypad {
   }
 
   public function read(): bool {
-    return $this->keyRegistors[$this->index++];
+    $this->index += $this->index;
+    return $this->keyRegistors[$this->index];
   }
 }

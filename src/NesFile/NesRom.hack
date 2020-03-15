@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace Hes\NesFile;
 
 final class NesRom {

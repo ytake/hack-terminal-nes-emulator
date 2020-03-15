@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace Hes\Ppu;
 
 use type Hes\Bus\PpuBus;
@@ -348,9 +346,10 @@ class Ppu {
   }
 
   public function calcVramAddr(): int {
-    return ($this->vramAddr >= 0x3000 && $this->vramAddr < 0x3f00)
-      ? $this->vramAddr -= 0x3000
-      : $this->vramAddr - 0x2000;
+    if ($this->vramAddr >= 0x3000 && $this->vramAddr < 0x3f00) {
+      return $this->vramAddr - 0x3000;
+    }
+    return $this->vramAddr - 0x2000;
   }
 
   public function writeVramData(int $data): void {

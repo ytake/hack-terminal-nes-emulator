@@ -1,12 +1,10 @@
-<?hh // strict
-
 namespace Hes\Bus;
 
 use namespace HH\Lib\Str;
-
 use function dechex;
 
 class Rom {
+
   public function __construct(
     protected Vector<int> $rom
   ) {}

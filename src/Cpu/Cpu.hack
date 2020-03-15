@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace Hes\Cpu;
 
 use type Hes\Bus\CpuBus;
@@ -524,7 +522,8 @@ final class Cpu implements ProcessingInterface {
         $this->registers->pc += 2;
         break;
       case 'LAX':
-        $this->registers->a = $this->registers->x = $this->read($addrOrData);
+        $this->registers->x = $this->read($addrOrData);
+        $this->registers->a = $this->registers->x;
         $this->resolveStatus($this->registers->p)->negative = !!($this->registers->a & 0x80);
         $this->resolveStatus($this->registers->p)->zero = !$this->registers->a;
         break;

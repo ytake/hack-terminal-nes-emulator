@@ -13,7 +13,7 @@ HHVM >= 3.28 (*Not Supoorted PHP*)
 ### Composer
 
 ```bash
-$ hhvm $(which composer) install
+$ composer install
 ```
 
 ## Usage

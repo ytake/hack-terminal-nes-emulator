@@ -1,8 +1,6 @@
-<?hh // strict
-
 namespace Hes\Ppu\Canvas;
 
-use type Facebook\CLILib\OutputInterface;
+use type HH\Lib\Experimental\IO\WriteHandle;
 use namespace namespace HH\Lib\Str;
 
 use function is_dir;
@@ -35,6 +33,7 @@ class NullCanvas extends AbstractDisposeCanvas {
 
   <<__Override>>
   public function close(): void {
+    $this->fp as resource;
     fclose($this->fp);
   }
 
@@ -45,7 +44,7 @@ class NullCanvas extends AbstractDisposeCanvas {
   <<__Override>>
   public async function drawAsync(
     Map<int, int> $_frameBuffer,
-    OutputInterface $output
+    WriteHandle $output
   ): Awaitable<void> {
     $this->fp = $this->fileOpen();
     $microTime = microtime(true);
@@ -57,7 +56,9 @@ class NullCanvas extends AbstractDisposeCanvas {
       );
       $this->frame = 0;
     }
-    fprintf($this->fp, "%-8.2f frame %d\n", $microTime, $this->frame++);
+    $this->fp as resource;
+    $this->frame += $this->frame;
+    fprintf($this->fp, "%-8.2f frame %d\n", $microTime, $this->frame);
     $this->last = floor($microTime);
   }
 }

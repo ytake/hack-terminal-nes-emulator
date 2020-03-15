@@ -1,8 +1,6 @@
-<?hh // strict
-
 namespace Hes\Ppu\Canvas;
 
-use type Facebook\CLILib\OutputInterface;
+use type HH\Lib\Experimental\IO\WriteHandle;
 
 <<__Sealed(AbstractDisposeCanvas::class)>>
 interface CanvasInterface {
@@ -12,6 +10,6 @@ interface CanvasInterface {
 
   public function drawAsync(
     Map<int, int> $canvasBuffer,
-    OutputInterface $output
+    WriteHandle $output
   ): Awaitable<void>;
 }

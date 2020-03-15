@@ -1,10 +1,8 @@
-<?hh // strict
-
 namespace Hes\Ppu;
 
 use namespace HH\Lib\C;
 use namespace Hes\Ppu;
-use type Facebook\CLILib\OutputInterface;
+use type HH\Lib\Experimental\IO\WriteHandle;
 
 use function array_fill;
 use function intval;
@@ -111,7 +109,7 @@ class Renderer {
   public function render(
     RenderingData $data,
     Ppu\Canvas $canvas,
-    OutputInterface $output
+    WriteHandle $output
   ): void {
     if ($data->background is Vector<_>) {
       $this->renderBackground($data->background, $data->palette);
@@ -173,7 +171,7 @@ class Renderer {
           $y = $tileY + $i - $offsetY;
           if ($x >= 0 && 0xFF >= $x && $y >= 0 && $y < 224) {
             $index = ($x + ($y * 0x100)) * 4;
-            $this->frameBuffer->addAll([
+            $this->frameBuffer->addAll(vec[
               Pair{$index, $color[0]},
               Pair{$index + 1, $color[1]},
               Pair{$index + 2, $color[2]},
@@ -205,7 +203,7 @@ class Renderer {
           if($v is int) {
             $color = $this->immColor->at($v);
             $index = ($x + $y * 0x100) * 4;
-            $this->frameBuffer->addAll([
+            $this->frameBuffer->addAll(vec[
               Pair{$index, $color[0]},
               Pair{$index + 1, $color[1]},
               Pair{$index + 2, $color[2]},

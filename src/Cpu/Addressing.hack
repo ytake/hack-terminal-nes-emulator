@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace Hes\Cpu;
 
 enum Addressing: string as string {

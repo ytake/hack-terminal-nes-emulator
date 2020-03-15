@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace Hes;
 
 use namespace Hes\Ppu;
@@ -15,7 +13,7 @@ use type Hes\Cpu\OpCode;
 use type Hes\Cpu\Interrupts;
 use type Hes\Bus\Keypad;
 use type Hes\NesFile\NesFile;
-use type Facebook\CLILib\OutputInterface;
+use type HH\Lib\Experimental\IO\WriteHandle;
 
 use function is_file;
 use function file_get_contents;
@@ -38,7 +36,7 @@ class Nes {
 
   public function __construct(
     protected Ppu\Canvas $canvas,
-    protected OutputInterface $output
+    protected WriteHandle $output
   ) {
     $this->renderer = new Ppu\Renderer();
     $this->keypad = new Keypad();
@@ -94,7 +92,7 @@ class Nes {
     }
   }
 
-  private function frame(): mixed {
+  private function frame(): void {
     $dma = $this->dma;
     $cpu = $this->cpu;
     $ppu = $this->ppu;

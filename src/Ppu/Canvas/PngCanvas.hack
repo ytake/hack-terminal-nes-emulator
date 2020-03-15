@@ -1,8 +1,6 @@
-<?hh // strict
-
 namespace Hes\Ppu\Canvas;
 
-use type Facebook\CLILib\OutputInterface;
+use type HH\Lib\Experimental\IO\WriteHandle;
 
 use function imagecreatetruecolor;
 use function imagecolorallocate;
@@ -23,7 +21,7 @@ class PngCanvas extends AbstractDisposeCanvas {
   <<__Override>>
   public async function drawAsync(
     Map<int, int> $canvasBuffer,
-    OutputInterface $_output
+    WriteHandle $_output
   ): Awaitable<void> {
     $image = $this->imageColor();
     for ($y = 0; $y < CanvasInterface::screenHeight; $y++) {
@@ -41,6 +39,7 @@ class PngCanvas extends AbstractDisposeCanvas {
     if (! is_dir('screen')) {
       mkdir('screen');
     }
-    imagepng($image, sprintf("screen/%08d.png", $this->serial++));
+    $this->serial += $this->serial;
+    imagepng($image, sprintf("screen/%08d.png", $this->serial));
   }
 }

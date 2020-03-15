@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace HesTest\Bus;
 
 use type Hes\Bus\Rom;

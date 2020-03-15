@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace Hes\Cpu;
 
 use namespace Hes\Cpu\Registers;

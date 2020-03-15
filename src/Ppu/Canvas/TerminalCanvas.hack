@@ -1,10 +1,8 @@
-<?hh // strict
-
 namespace Hes\Ppu\Canvas;
 
 use namespace HH\Lib\Str;
 
-use type Facebook\CLILib\OutputInterface;
+use type HH\Lib\Experimental\IO\WriteHandle;
 
 use function floor;
 use function time;
@@ -37,7 +35,7 @@ final class TerminalCanvas extends AbstractDisposeCanvas {
   <<__Override>>
   public async function drawAsync(
     Map<int, int> $canvasBuffer,
-    OutputInterface $output
+    WriteHandle $output
   ): Awaitable<void> {
     if ($this->currentSecond !== time()) {
       $this->fps = $this->framesInSecond;
@@ -50,7 +48,6 @@ final class TerminalCanvas extends AbstractDisposeCanvas {
     $screenHeight = CanvasInterface::screenHeight;
     $charWidth = intval($screenWidth / 2);
     $charHeight = intval($screenHeight / 4);
-
     if ($canvasBuffer !== $this->lastFrameCanvasBuffer) {
       $chars = $this->fill($screenWidth, $screenHeight);
       $frame = '';

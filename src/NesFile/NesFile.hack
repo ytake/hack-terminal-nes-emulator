@@ -1,5 +1,3 @@
-<?hh // strict
-
 namespace Hes\NesFile;
 
 use namespace HH\Lib\Str;
